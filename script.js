@@ -172,9 +172,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) btn.classList.toggle('active', on);
     if (name === 'numRoot' || name === 'root') {
       row.querySelector('.ans-num .rad').classList.toggle('hidden', !on);
+      // √ の前の係数は空欄なら 1．薄い「1」で空欄のままでよいことを示す
+      row.querySelector('.ans-num > .val-input').placeholder = on ? '1' : '';
     }
     if (name === 'denRoot') {
       row.querySelector('.ans-den .rad').classList.toggle('hidden', !on);
+      row.querySelector('.ans-den > .val-input').placeholder = on ? '1' : '';
     }
     if (name === 'frac') {
       row.querySelector('.ans-line').classList.toggle('hidden', !on);
