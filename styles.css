@@ -38,17 +38,12 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   background-color: var(--apple-bg);
-  /* 薄い直角三角形の背景＋青緑〜琥珀のパステル */
+  /* 薄い直角三角形の背景＋落ち着いた青緑の淡色（色数をしぼる） */
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22900%22 height=%22700%22 viewBox=%220 0 900 700%22%3E%3Cg fill=%22none%22 stroke=%22rgba%2815,23,42,0.08%29%22 stroke-width=%222%22%3E%3Cpolygon points=%22120,590 780,590 780,110%22/%3E%3Cpolyline points=%22752,590 752,562 780,562%22/%3E%3Cpath d=%22M 190 590 A 70 70 0 0 0 176.6 548.8%22/%3E%3C/g%3E%3Cg fill=%22rgba%2815,23,42,0.12%29%22 font-family=%22Georgia,serif%22 font-style=%22italic%22%3E%3Ctext x=%22205%22 y=%22572%22 font-size=%2230%22%3E%CE%B8%3C/text%3E%3Ctext x=%22420%22 y=%22320%22 font-size=%2226%22 transform=%22rotate%28-36 420 320%29%22%3Esin %CE%B8 = BC / AB%3C/text%3E%3C/g%3E%3C/svg%3E"),
-    linear-gradient(120deg,
-      rgba(20, 184, 166, 0.35) 0%,
-      rgba(56, 189, 248, 0.30) 30%,
-      rgba(250, 204, 21, 0.30) 60%,
-      rgba(251, 146, 60, 0.35) 80%,
-      rgba(20, 184, 166, 0.35) 100%);
-  background-size: 900px 700px, 300% 300%;
-  background-position: center, 0% 50%;
+    linear-gradient(160deg, #e6f4f1 0%, #f4f8fa 55%, #eef2f6 100%);
+  background-size: 900px 700px, 100% 100%;
+  background-position: center, 0 0;
   background-repeat: no-repeat, no-repeat;
   background-attachment: fixed, fixed;
   color: var(--apple-text-primary);
@@ -57,13 +52,6 @@ body {
   justify-content: center;
   align-items: center;
   overflow-x: hidden;
-  animation: glow 30s ease infinite;
-}
-
-@keyframes glow {
-  0% { background-position: center, 0% 50%; }
-  50% { background-position: center, 100% 50%; }
-  100% { background-position: center, 0% 50%; }
 }
 
 .container {
@@ -138,7 +126,7 @@ h1 {
   font-weight: 800;
   letter-spacing: -2px;
   font-family: 'Outfit', sans-serif;
-  background: linear-gradient(135deg, #0d9488, #0ea5e9 40%, #f59e0b 70%, #ea580c);
+  background: linear-gradient(135deg, #14b8a6, #0f766e);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -423,12 +411,38 @@ h1 {
 }
 
 .step-badge.badge-accent {
-  background: var(--theme-accent);
+  background: var(--theme-secondary);
 }
 
 .intro-step h3 {
   font-size: 15px;
   font-weight: 700;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.chip {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--glass-border);
+  background: #ffffff;
+  color: var(--apple-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chip.active {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+  color: #ffffff;
 }
 
 .intro-step p {
@@ -649,10 +663,13 @@ h1 {
   transition: all 0.2s;
 }
 
-.val-input::placeholder {
-  color: var(--apple-text-secondary, #9ca3af);
-  opacity: 0.45;
-  font-weight: 500;
+/* √ の前の係数：空のあいだは細い点線の枠（書かなくてよい＝1） */
+.root-on > .coef:placeholder-shown:not(:focus) {
+  width: 20px;
+  border-style: dashed;
+  border-color: #cbd5e1;
+  background: transparent;
+  margin-right: 2px;
 }
 
 .val-input:focus {

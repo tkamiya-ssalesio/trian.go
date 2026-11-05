@@ -27,8 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const appHeader = $('app-header');
   const backBtn = $('back-btn');
   const headerTitle = $('header-title');
-  const screens = ['title-screen', 'tutorial-select-screen', 'tutorial-screen', 'category-select-screen', 'mode-select-screen', 'intro-screen', 'problem-area'].map($);
-  const [titleScreen, tutorialSelectScreen, tutorialScreen, categorySelectScreen, modeSelectScreen, introScreen, problemArea] = screens;
+  const screens = ['title-screen', 'tutorial-select-screen', 'tutorial-screen', 'mode-select-screen', 'intro-screen', 'problem-area'].map($);
+  const [titleScreen, tutorialSelectScreen, tutorialScreen, modeSelectScreen, introScreen, problemArea] = screens;
 
   const tutorialTitle = $('tutorial-title');
   const tutorialContent = $('tutorial-content');
@@ -116,8 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
     { key: 'tan', tex: '\\tan\\theta =' }
   ];
 
-  function inputHTML(role, ph) {
-    return `<input type="text" inputmode="numeric" autocomplete="off" maxlength="4" class="val-input" data-role="${role}" placeholder="${ph || ''}">`;
+  function inputHTML(role, ph, cls) {
+    return `<input type="text" inputmode="numeric" autocomplete="off" maxlength="4" class="val-input ${cls || ''}" data-role="${role}" placeholder="${ph || ''}">`;
   }
 
   function ratioRowHTML(row) {
@@ -127,12 +127,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="ans-body">
           <div class="ans-value">
             <div class="ans-part ans-num">
-              ${inputHTML('a')}
+              ${inputHTML('a', ' ', 'coef')}
               <span class="rad hidden"><span class="rad-sign">√</span>${inputHTML('b')}</span>
             </div>
             <div class="ans-line hidden"></div>
             <div class="ans-part ans-den hidden">
-              ${inputHTML('c')}
+              ${inputHTML('c', ' ', 'coef')}
               <span class="rad hidden"><span class="rad-sign">√</span>${inputHTML('d')}</span>
             </div>
           </div>
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="ans-body">
           <div class="ans-value">
             <div class="ans-part ans-num">
-              ${inputHTML('k')}
+              ${inputHTML('k', ' ', 'coef')}
               <span class="rad hidden"><span class="rad-sign">√</span>${inputHTML('m')}</span>
             </div>
           </div>
@@ -171,13 +171,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = row.querySelector(`[data-toggle="${name}"]`);
     if (btn) btn.classList.toggle('active', on);
     if (name === 'numRoot' || name === 'root') {
-      row.querySelector('.ans-num .rad').classList.toggle('hidden', !on);
-      // √ の前の係数は空欄なら 1．薄い「1」で空欄のままでよいことを示す
-      row.querySelector('.ans-num > .val-input').placeholder = on ? '1' : '';
+      setRootPart(row.querySelector('.ans-num'), on);
     }
     if (name === 'denRoot') {
-      row.querySelector('.ans-den .rad').classList.toggle('hidden', !on);
-      row.querySelector('.ans-den > .val-input').placeholder = on ? '1' : '';
+      setRootPart(row.querySelector('.ans-den'), on);
     }
     if (name === 'frac') {
       row.querySelector('.ans-line').classList.toggle('hidden', !on);
@@ -187,6 +184,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!on) setToggle(row, 'denRoot', false);
     }
     clearMark(row);
+  }
+
+  // √ を付けると √ の中の欄へ移る．√ の前の係数は書かなくてよい（空欄は 1）ので，
+  // 空のうちは細い点線の枠に縮めて，生徒がノートに書く「√21」の見た目に近づける
+  function setRootPart(part, on) {
+    part.querySelector('.rad').classList.toggle('hidden', !on);
+    part.classList.toggle('root-on', on);
+    if (on && !isLocked) {
+      const inner = part.querySelector('.rad .val-input');
+      if (inner && inner.offsetParent !== null) inner.focus({ preventScroll: true });
+    }
   }
 
   function clearMark(row) {
@@ -244,14 +252,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   $('go-to-tutorial-btn').addEventListener('click', () => show(tutorialSelectScreen, 'やり方を学ぶ'));
-  $('go-to-training-btn').addEventListener('click', () => show(categorySelectScreen, 'カテゴリ選択'));
+  $('go-to-training-btn').addEventListener('click', () => show(modeSelectScreen, 'ゲームモード選択'));
 
   backBtn.addEventListener('click', () => {
     resetGameTimers();
     if (!tutorialScreen.classList.contains('hidden')) show(tutorialSelectScreen, 'やり方を学ぶ');
-    else if (!modeSelectScreen.classList.contains('hidden')) show(categorySelectScreen, 'カテゴリ選択');
     else if (!introScreen.classList.contains('hidden')) show(modeSelectScreen, 'ゲームモード選択');
-    else if (!problemArea.classList.contains('hidden')) show(modeSelectScreen, 'ゲームモード選択');
+    else if (!problemArea.classList.contains('hidden')) showIntro();
     else show(titleScreen);
   });
 
@@ -456,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <p><b>入力のしかた</b></p>
             <ul class="term-list">
               <li><span class="toggle-btn demo">分数</span>：分母の欄が出ます．</li>
-              <li><span class="toggle-btn demo">√</span>：√ の中の数を入れる欄が出ます．√ の前の数が 1 のときは空欄のままでかまいません．</li>
+              <li><span class="toggle-btn demo">√</span>：√ の中の数を入れる欄が出ます．${T('\\sqrt{21}')} はそのまま 21 だけ入れます．${T('2\\sqrt{3}')} のように √ の前に数があるときだけ，前の点線の枠に入れます．</li>
               <li><span class="toggle-btn demo">分母に√</span>：分数のとき，分母に √ を付けます．</li>
             </ul>
             <div class="visual-box">
@@ -511,22 +518,32 @@ document.addEventListener('DOMContentLoaded', () => {
     scoreAttack: { name: 'スコアアタック', desc: '制限時間は90秒．正解すると残り時間が10秒増え，連続正解でコンボボーナスが入ります．' }
   };
 
-  document.querySelectorAll('.category-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentCategory = btn.dataset.category;
-      show(modeSelectScreen, 'ゲームモード選択');
-    });
-  });
+  // スタート前の確認：問題の種類とルールはここで切り替えられる
+  function refreshIntro() {
+    $('intro-cat-name').textContent = CAT[currentCategory].name;
+    $('intro-cat-desc').textContent = CAT[currentCategory].desc;
+    $('intro-mode-name').textContent = MODE[currentGameMode].name;
+    $('intro-mode-desc').textContent = MODE[currentGameMode].desc;
+    document.querySelectorAll('#cat-chips .chip').forEach(b => b.classList.toggle('active', b.dataset.category === currentCategory));
+    document.querySelectorAll('#mode-chips .chip').forEach(b => b.classList.toggle('active', b.dataset.mode === currentGameMode));
+  }
+  function showIntro() {
+    resetGameTimers();
+    refreshIntro();
+    show(introScreen, '準備');
+  }
 
   document.querySelectorAll('.game-mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       currentGameMode = btn.dataset.mode;
-      $('intro-cat-name').textContent = CAT[currentCategory].name;
-      $('intro-cat-desc').textContent = CAT[currentCategory].desc;
-      $('intro-mode-name').textContent = MODE[currentGameMode].name;
-      $('intro-mode-desc').textContent = MODE[currentGameMode].desc;
-      show(introScreen, '準備');
+      showIntro();
     });
+  });
+  document.querySelectorAll('#cat-chips .chip').forEach(btn => {
+    btn.addEventListener('click', () => { currentCategory = btn.dataset.category; refreshIntro(); });
+  });
+  document.querySelectorAll('#mode-chips .chip').forEach(btn => {
+    btn.addEventListener('click', () => { currentGameMode = btn.dataset.mode; refreshIntro(); });
   });
 
   $('start-game-btn').addEventListener('click', () => {
@@ -739,9 +756,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="result-title">${title}</div>
       <div class="result-subtitle">${detail}</div>
       <button class="primary-btn" id="retry-btn">もう一度挑戦</button>
-      <button class="secondary-btn" id="to-menu-btn">モード選択へ戻る</button>`;
+      <button class="secondary-btn" id="to-menu-btn">問題・ルールを変える</button>`;
     $('retry-btn').addEventListener('click', initGameSession);
-    $('to-menu-btn').addEventListener('click', () => show(modeSelectScreen, 'ゲームモード選択'));
+    $('to-menu-btn').addEventListener('click', showIntro);
   }
 
   let toastTimer = null;

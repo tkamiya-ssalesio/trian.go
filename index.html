@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <!-- canvas-confetti for effects -->
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 
@@ -44,7 +44,7 @@
             <span class="icon">⚡</span>
             <div class="btn-text">
               <h3>トレーニングを開始する</h3>
-              <p>3つのカテゴリと4つのゲームモード</p>
+              <p>4つのゲームモード．問題の種類は開始前に選べる</p>
             </div>
           </button>
         </div>
@@ -92,34 +92,6 @@
         </div>
       </div>
 
-      <!-- 4. Category Select Screen -->
-      <div id="category-select-screen" class="hidden">
-        <h2 class="screen-title">学習カテゴリを選択</h2>
-        <div class="menu-buttons">
-          <button class="menu-btn category-btn" data-category="three">
-            <span class="icon">🔰</span>
-            <div class="btn-text">
-              <h3>① 3辺がわかる三角形</h3>
-              <p>3辺の長さから sin・cos・tan を求める</p>
-            </div>
-          </button>
-          <button class="menu-btn category-btn" data-category="two">
-            <span class="icon">📏</span>
-            <div class="btn-text">
-              <h3>② 2辺から求める</h3>
-              <p>三平方の定理で残りの辺を求めてから三角比へ</p>
-            </div>
-          </button>
-          <button class="menu-btn category-btn" data-category="mix">
-            <span class="icon">🔀</span>
-            <div class="btn-text">
-              <h3>③ ミックス</h3>
-              <p>①と②がランダムに出題される</p>
-            </div>
-          </button>
-        </div>
-      </div>
-
       <!-- 5. Game Mode Select Screen -->
       <div id="mode-select-screen" class="hidden">
         <h2 class="screen-title">ゲームモードを選択</h2>
@@ -157,20 +129,31 @@
 
       <!-- 6. Intro Screen -->
       <div id="intro-screen" class="hidden">
-        <h2 class="screen-title">ゲーム開始準備</h2>
+        <h2 class="screen-title">スタート前の確認</h2>
         <div class="intro-box">
           <div class="intro-steps">
             <div class="intro-step">
               <div class="step-header">
-                <span class="step-badge">カテゴリ</span>
+                <span class="step-badge">問題</span>
                 <h3 id="intro-cat-name"></h3>
+              </div>
+              <div class="chip-group" id="cat-chips">
+                <button type="button" class="chip" data-category="three">① 3辺</button>
+                <button type="button" class="chip" data-category="two">② 2辺から</button>
+                <button type="button" class="chip" data-category="mix">③ ミックス</button>
               </div>
               <p id="intro-cat-desc"></p>
             </div>
             <div class="intro-step">
               <div class="step-header">
-                <span class="step-badge badge-accent">ルール</span>
+                <span class="step-badge">ルール</span>
                 <h3 id="intro-mode-name"></h3>
+              </div>
+              <div class="chip-group" id="mode-chips">
+                <button type="button" class="chip" data-mode="practice">練習</button>
+                <button type="button" class="chip" data-mode="timeAttack">タイムアタック</button>
+                <button type="button" class="chip" data-mode="survival">サバイバル</button>
+                <button type="button" class="chip" data-mode="scoreAttack">スコアアタック</button>
               </div>
               <p id="intro-mode-desc"></p>
             </div>
@@ -210,7 +193,7 @@
 
   <div class="feedback" id="feedback-toast"></div>
 
-  <script defer src="core.js?v=3"></script>
-  <script defer src="script.js?v=3"></script>
+  <script defer src="core.js?v=4"></script>
+  <script defer src="script.js?v=4"></script>
 </body>
 </html>
