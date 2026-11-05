@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>trian.go | 三角比トレーニング</title>
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- canvas-confetti for effects -->
+  <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+
+  <div class="container">
+    <div class="apple-card" id="app-card">
+
+      <!-- App Header (Hidden on Title Screen) -->
+      <header id="app-header" class="hidden">
+        <button class="back-btn" id="back-btn">◀ 戻る</button>
+        <h1 id="header-title">trian.go</h1>
+        <div class="header-placeholder"></div>
+      </header>
+
+      <!-- 1. Title Screen -->
+      <div id="title-screen" class="title-screen">
+        <div class="title-logo">trian.go</div>
+        <div class="title-subtitle">三角比（sin・cos・tan）特訓アプリ</div>
+
+        <div class="menu-buttons">
+          <button class="menu-btn" id="go-to-tutorial-btn">
+            <span class="icon">📖</span>
+            <div class="btn-text">
+              <h3>やり方を学ぶ</h3>
+              <p>三角比の定義をスライドで理解する</p>
+            </div>
+          </button>
+          <button class="menu-btn" id="go-to-training-btn">
+            <span class="icon">⚡</span>
+            <div class="btn-text">
+              <h3>トレーニングを開始する</h3>
+              <p>3つのカテゴリと4つのゲームモード</p>
+            </div>
+          </button>
+        </div>
+        <div class="app-footer">v1.0.0 | Produced by T.Kamiya</div>
+      </div>
+
+      <!-- 2. Tutorial Select Screen -->
+      <div id="tutorial-select-screen" class="hidden">
+        <h2 class="screen-title">何を学びますか？</h2>
+        <div class="menu-buttons">
+          <button class="menu-btn tutorial-btn" data-tutorial="define">
+            <span class="icon">📐</span>
+            <div class="btn-text">
+              <h3>三角比の定義</h3>
+              <p>辺の呼び方と sin・cos・tan，向きが変わったときの見方</p>
+            </div>
+          </button>
+          <button class="menu-btn tutorial-btn" data-tutorial="similar">
+            <span class="icon">🔍</span>
+            <div class="btn-text">
+              <h3>大きさによらない</h3>
+              <p>三角比は角 θ の大きさだけで決まる（相似）</p>
+            </div>
+          </button>
+          <button class="menu-btn tutorial-btn" data-tutorial="answer">
+            <span class="icon">✍️</span>
+            <div class="btn-text">
+              <h3>2辺から求める・答え方</h3>
+              <p>三平方の定理と，約分・√・有理化のルール</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. Tutorial Slideshow Screen -->
+      <div id="tutorial-screen" class="hidden">
+        <h2 class="slide-title" id="tutorial-title">チュートリアル</h2>
+        <div class="tutorial-card">
+          <div id="tutorial-content"></div>
+        </div>
+        <div class="tutorial-nav-btns">
+          <button class="secondary-btn" id="tutorial-prev-btn">◀ 前へ</button>
+          <div class="slide-indicator" id="slide-indicator">1 / 3</div>
+          <button class="primary-btn" id="tutorial-next-btn">次へ ▶</button>
+        </div>
+      </div>
+
+      <!-- 4. Category Select Screen -->
+      <div id="category-select-screen" class="hidden">
+        <h2 class="screen-title">学習カテゴリを選択</h2>
+        <div class="menu-buttons">
+          <button class="menu-btn category-btn" data-category="three">
+            <span class="icon">🔰</span>
+            <div class="btn-text">
+              <h3>① 3辺がわかる三角形</h3>
+              <p>3辺の長さから sin・cos・tan を求める</p>
+            </div>
+          </button>
+          <button class="menu-btn category-btn" data-category="two">
+            <span class="icon">📏</span>
+            <div class="btn-text">
+              <h3>② 2辺から求める</h3>
+              <p>三平方の定理で残りの辺を求めてから三角比へ</p>
+            </div>
+          </button>
+          <button class="menu-btn category-btn" data-category="mix">
+            <span class="icon">🔀</span>
+            <div class="btn-text">
+              <h3>③ ミックス</h3>
+              <p>①と②がランダムに出題される</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. Game Mode Select Screen -->
+      <div id="mode-select-screen" class="hidden">
+        <h2 class="screen-title">ゲームモードを選択</h2>
+        <div class="menu-buttons">
+          <button class="menu-btn game-mode-btn" data-mode="practice">
+            <span class="icon">♾️</span>
+            <div class="btn-text">
+              <h3>練習モード</h3>
+              <p>制限時間なし．解説を見ながらじっくりトレーニング</p>
+            </div>
+          </button>
+          <button class="menu-btn game-mode-btn" data-mode="timeAttack">
+            <span class="icon">⏱️</span>
+            <div class="btn-text">
+              <h3>タイムアタック</h3>
+              <p>5問正解するまでの最速タイムを競う（誤答ペナルティあり）</p>
+            </div>
+          </button>
+          <button class="menu-btn game-mode-btn" data-mode="survival">
+            <span class="icon">❤️</span>
+            <div class="btn-text">
+              <h3>サバイバル</h3>
+              <p>ライフは3つ．間違えるたびにライフ減少，どこまで進めるか</p>
+            </div>
+          </button>
+          <button class="menu-btn game-mode-btn" data-mode="scoreAttack">
+            <span class="icon">🔥</span>
+            <div class="btn-text">
+              <h3>スコアアタック</h3>
+              <p>制限時間90秒．コンボを繋げてハイスコアを目指せ！</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 6. Intro Screen -->
+      <div id="intro-screen" class="hidden">
+        <h2 class="screen-title">ゲーム開始準備</h2>
+        <div class="intro-box">
+          <div class="intro-steps">
+            <div class="intro-step">
+              <div class="step-header">
+                <span class="step-badge">カテゴリ</span>
+                <h3 id="intro-cat-name"></h3>
+              </div>
+              <p id="intro-cat-desc"></p>
+            </div>
+            <div class="intro-step">
+              <div class="step-header">
+                <span class="step-badge badge-accent">ルール</span>
+                <h3 id="intro-mode-name"></h3>
+              </div>
+              <p id="intro-mode-desc"></p>
+            </div>
+          </div>
+        </div>
+        <button class="primary-btn" id="start-game-btn" style="margin-top: 20px;">スタート！</button>
+      </div>
+
+      <!-- 7. Problem Area -->
+      <div id="problem-area" class="hidden">
+        <div class="stats-bar">
+          <span id="stats-left"></span>
+          <span id="stats-right"></span>
+        </div>
+
+        <div id="game-view">
+          <div class="prompt-text" id="problem-prompt"></div>
+          <div class="figure" id="figure"></div>
+          <div class="answer-list" id="answer-list"></div>
+
+          <div class="explain hidden" id="explain-box"></div>
+
+          <div class="actions" id="action-area">
+            <button class="primary-btn" id="judge-btn">判定する</button>
+            <div class="sub-actions" id="practice-actions">
+              <button class="link-btn hidden" id="show-explain-btn">💡 解説を見る</button>
+              <button class="link-btn hidden" id="next-btn">次の問題へ ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="result-view" class="result-view hidden"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="feedback" id="feedback-toast"></div>
+
+  <script defer src="core.js?v=1"></script>
+  <script defer src="script.js?v=1"></script>
+</body>
+</html>
