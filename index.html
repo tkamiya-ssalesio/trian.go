@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <!-- canvas-confetti for effects -->
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
 
@@ -134,6 +134,13 @@
           <span class="mode-note-name" id="intro-mode-name"></span>
           <p id="intro-mode-desc"></p>
         </div>
+        <div class="orient-setting">
+          <span class="orient-label">三角形の向き</span>
+          <div class="seg" id="orient-toggle">
+            <button type="button" class="seg-btn" data-fixed="0">毎回変わる</button>
+            <button type="button" class="seg-btn" data-fixed="1">いつも同じ（θ 左下）</button>
+          </div>
+        </div>
         <h2 class="screen-title">問題を選んでスタート</h2>
         <div class="menu-buttons">
           <button class="menu-btn category-btn" data-category="three">
@@ -191,7 +198,7 @@
 
   <div class="feedback" id="feedback-toast"></div>
 
-  <script defer src="core.js?v=5"></script>
-  <script defer src="script.js?v=5"></script>
+  <script defer src="core.js?v=7"></script>
+  <script defer src="script.js?v=7"></script>
 </body>
 </html>

@@ -419,6 +419,44 @@ h1 {
   font-weight: 700;
 }
 
+.orient-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.orient-label {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.seg {
+  display: inline-flex;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 999px;
+  padding: 3px;
+  background: #ffffff;
+}
+
+.seg-btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--apple-text-secondary);
+  cursor: pointer;
+}
+
+.seg-btn.active {
+  background: var(--theme-primary);
+  color: #ffffff;
+}
+
 .mode-note {
   background: var(--apple-bg);
   border: 1.5px solid var(--glass-border);
@@ -937,4 +975,10 @@ h1 {
   .lbl-theta { font-size: 18px; }
   .lbl-vertex { font-size: 14px; }
   .math-line { font-size: 16px; }
+}
+
+#intro-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }

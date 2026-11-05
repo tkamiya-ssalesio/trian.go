@@ -107,6 +107,13 @@ for (let n = 0; n < 2000; n++) {
   ok(inTri, `θ のラベルが三角形の外 ${JSON.stringify(prob)}`);
 }
 
+// 4b. 向きを固定すると θ（A）が左下，直角（C）が右下，B が右上
+for (let n = 0; n < 200; n++) {
+  const prob = C.generateProblem('mix', rng, { fixed: true });
+  const { A, B, C: Cp } = C.layoutTriangle(prob).P;
+  ok(A[0] < Cp[0] && Math.abs(A[1] - Cp[1]) < 1e-9 && Math.abs(B[0] - Cp[0]) < 1e-9 && B[1] < Cp[1], '固定の向き ' + JSON.stringify(prob));
+}
+
 // 5. 向きの種類が偏っていない
 const modes = {};
 for (let n = 0; n < 1000; n++) { const o = C.randomOrientation(rng); modes[o.mode + (o.flip ? '-flip' : '')] = (modes[o.mode + (o.flip ? '-flip' : '')] || 0) + 1; }

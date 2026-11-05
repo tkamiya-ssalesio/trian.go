@@ -107,8 +107,10 @@
   }
 
   // category: 'three'（3辺がわかる）| 'two'（2辺から求める）| 'mix'
-  function generateProblem(category, rng) {
+  // opts.fixed：向きを固定（θ が左下，直角が右下）．じっくり定義を覚える用
+  function generateProblem(category, rng, opts) {
     rng = rng || Math.random;
+    opts = opts || {};
     const cat = category === 'mix' ? (rng() < 0.5 ? 'three' : 'two') : category;
     const sq = rng() < 0.4 ? genIntegerTriangle(rng) : genRadicalTriangle(rng);
     let hidden = null;
@@ -120,7 +122,7 @@
       kind: cat,
       opp2: sq.opp2, adj2: sq.adj2, hyp2: sq.hyp2,
       hidden, // 隠す辺（'hyp' = AB，'opp' = BC，'adj' = AC）
-      orient: randomOrientation(rng)
+      orient: opts.fixed ? Object.assign({}, STANDARD_ORIENT) : randomOrientation(rng)
     };
   }
 
@@ -252,6 +254,8 @@
   }
 
   // ---------- 三角形の向きと配置 ----------
+  const STANDARD_ORIENT = { mode: 'axis', phi: 0, flip: false };
+
   function randomOrientation(rng) {
     const u = rng();
     let mode, phi;

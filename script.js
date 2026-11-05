@@ -518,11 +518,26 @@ document.addEventListener('DOMContentLoaded', () => {
     scoreAttack: { name: 'スコアアタック', desc: '制限時間は90秒．正解すると残り時間が10秒増え，連続正解でコンボボーナスが入ります．' }
   };
 
+  // 三角形の向き：毎回変える／いつも同じ（θ 左下・直角 右下）．端末に覚えておく
+  let fixedOrient = false;
+  try { fixedOrient = localStorage.getItem('trian.fixedOrient') === '1'; } catch (e) { /* 使えなくても動く */ }
+  function refreshOrientToggle() {
+    document.querySelectorAll('#orient-toggle .seg-btn').forEach(b => b.classList.toggle('active', (b.dataset.fixed === '1') === fixedOrient));
+  }
+  document.querySelectorAll('#orient-toggle .seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      fixedOrient = btn.dataset.fixed === '1';
+      try { localStorage.setItem('trian.fixedOrient', fixedOrient ? '1' : '0'); } catch (e) { /* 無視 */ }
+      refreshOrientToggle();
+    });
+  });
+
   // モードを選ぶ → 問題（カテゴリ）を選ぶとすぐ開始．ルールは表示だけ
   function showIntro() {
     resetGameTimers();
     $('intro-mode-name').textContent = MODE[currentGameMode].name;
     $('intro-mode-desc').textContent = MODE[currentGameMode].desc;
+    refreshOrientToggle();
     show(introScreen, MODE[currentGameMode].name);
   }
 
@@ -599,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
     judgeBtn.disabled = false;
     let prob;
     // 直前と同じ三角形が続かないように
-    do { prob = C.generateProblem(currentCategory); }
+    do { prob = C.generateProblem(currentCategory, Math.random, { fixed: fixedOrient }); }
     while (currentProblem && prob.opp2 === currentProblem.opp2 && prob.adj2 === currentProblem.adj2);
     currentProblem = prob;
 
