@@ -518,19 +518,12 @@ document.addEventListener('DOMContentLoaded', () => {
     scoreAttack: { name: 'スコアアタック', desc: '制限時間は90秒．正解すると残り時間が10秒増え，連続正解でコンボボーナスが入ります．' }
   };
 
-  // スタート前の確認：問題の種類とルールはここで切り替えられる
-  function refreshIntro() {
-    $('intro-cat-name').textContent = CAT[currentCategory].name;
-    $('intro-cat-desc').textContent = CAT[currentCategory].desc;
-    $('intro-mode-name').textContent = MODE[currentGameMode].name;
-    $('intro-mode-desc').textContent = MODE[currentGameMode].desc;
-    document.querySelectorAll('#cat-chips .chip').forEach(b => b.classList.toggle('active', b.dataset.category === currentCategory));
-    document.querySelectorAll('#mode-chips .chip').forEach(b => b.classList.toggle('active', b.dataset.mode === currentGameMode));
-  }
+  // モードを選ぶ → 問題（カテゴリ）を選ぶとすぐ開始．ルールは表示だけ
   function showIntro() {
     resetGameTimers();
-    refreshIntro();
-    show(introScreen, '準備');
+    $('intro-mode-name').textContent = MODE[currentGameMode].name;
+    $('intro-mode-desc').textContent = MODE[currentGameMode].desc;
+    show(introScreen, MODE[currentGameMode].name);
   }
 
   document.querySelectorAll('.game-mode-btn').forEach(btn => {
@@ -539,16 +532,12 @@ document.addEventListener('DOMContentLoaded', () => {
       showIntro();
     });
   });
-  document.querySelectorAll('#cat-chips .chip').forEach(btn => {
-    btn.addEventListener('click', () => { currentCategory = btn.dataset.category; refreshIntro(); });
-  });
-  document.querySelectorAll('#mode-chips .chip').forEach(btn => {
-    btn.addEventListener('click', () => { currentGameMode = btn.dataset.mode; refreshIntro(); });
-  });
-
-  $('start-game-btn').addEventListener('click', () => {
-    show(problemArea, 'トレーニング中', '◀ やめる');
-    initGameSession();
+  document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentCategory = btn.dataset.category;
+      show(problemArea, 'トレーニング中', '◀ やめる');
+      initGameSession();
+    });
   });
 
   // --- Game session ---
@@ -756,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="result-title">${title}</div>
       <div class="result-subtitle">${detail}</div>
       <button class="primary-btn" id="retry-btn">もう一度挑戦</button>
-      <button class="secondary-btn" id="to-menu-btn">問題・ルールを変える</button>`;
+      <button class="secondary-btn" id="to-menu-btn">問題を選び直す</button>`;
     $('retry-btn').addEventListener('click', initGameSession);
     $('to-menu-btn').addEventListener('click', showIntro);
   }
