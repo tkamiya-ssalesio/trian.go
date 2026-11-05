@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let saCombo = 0;
   let saMaxCombo = 0;
   let saTimerInterval = null;
+  let nextTimer = null;
+  let lastWrongKey = null; // 直前の誤答（同じ答えでの再判定に罰を入れない）
 
   // --- DOM ---
   const $ = id => document.getElementById(id);
@@ -48,7 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const feedbackToast = $('feedback-toast');
 
   // --- Math rendering ---
-  const T = (tex, display) => katex.renderToString(tex, { throwOnError: false, displayMode: !!display });
+  const T = (tex, display) => (typeof katex !== 'undefined')
+    ? katex.renderToString(tex, { throwOnError: false, displayMode: !!display })
+    : '<span class="tex-fallback">' + tex.replace(/[<>&]/g, '') + '</span>';
+  if (typeof katex === 'undefined') {
+    setTimeout(() => showFeedback('数式の表示部品を読み込めませんでした．ネットワークを確認して再読み込みしてください．', 'error'), 300);
+  }
   const D = tex => T('\\displaystyle ' + tex);
 
   // --- Figure (SVG + KaTeX labels) ---
@@ -110,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   function inputHTML(role, ph) {
-    return `<input type="text" inputmode="numeric" autocomplete="off" class="val-input" data-role="${role}" placeholder="${ph || ''}">`;
+    return `<input type="text" inputmode="numeric" autocomplete="off" maxlength="4" class="val-input" data-role="${role}" placeholder="${ph || ''}">`;
   }
 
   function ratioRowHTML(row) {
@@ -205,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   answerList.addEventListener('keydown', e => {
+    if (e.isComposing || e.keyCode === 229) return;
     if (e.key === 'Enter') { e.preventDefault(); judge(); }
   });
 
@@ -212,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function readInt(row, role) {
     const el = row.querySelector(`[data-role="${role}"]`);
     if (!el) return null;
-    const s = el.value.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).replace(/\s/g, '');
+    const s = el.value.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).trim();
     if (s === '') return null;
     if (!/^\d+$/.test(s)) return NaN;
     return parseInt(s, 10);
@@ -551,6 +559,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function resetGameTimers() {
+    if (nextTimer) { clearTimeout(nextTimer); nextTimer = null; }
+    lastWrongKey = null;
     if (taTimerInterval) clearInterval(taTimerInterval);
     if (saTimerInterval) clearInterval(saTimerInterval);
     taTimerInterval = saTimerInterval = null;
@@ -576,6 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function generateProblem() {
     isLocked = false;
+    lastWrongKey = null;
     judgeBtn.disabled = false;
     let prob;
     // 直前と同じ三角形が続かないように
@@ -619,7 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 未入力・入力ミスはペナルティなしで知らせる
     const blocking = results.findIndex(r => r.status === 'empty' || r.status === 'invalid');
     if (blocking >= 0) {
-      const el = rows[blocking].querySelector('.val-input:not(.hidden)');
+      const el = Array.from(rows[blocking].querySelectorAll('.val-input')).find(x => x.offsetParent !== null && x.value.trim() === '') || rows[blocking].querySelector('.val-input');
       showFeedback(results[blocking].hint, 'info');
       if (el) el.focus();
       return;
@@ -634,8 +645,11 @@ document.addEventListener('DOMContentLoaded', () => {
       else { row.classList.add('is-wrong'); row.querySelector('.ans-mark').textContent = '✕'; }
     });
 
-    if (results.every(r => r.status === 'correct')) handleSuccess();
-    else handleFailure(firstHint);
+    if (results.every(r => r.status === 'correct')) { handleSuccess(); return; }
+    const key = rows.map(r => JSON.stringify(r.dataset) + Array.from(r.querySelectorAll('.val-input')).map(x => x.value).join(',')).join('|');
+    if (key === lastWrongKey) { showFeedback('✕ や △ の欄を直してから判定しましょう．', 'info'); return; }
+    lastWrongKey = key;
+    handleFailure(firstHint);
   }
 
   judgeBtn.addEventListener('click', judge);
@@ -661,7 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStatsUI();
     showFeedback(msg, 'success');
     burst();
-    setTimeout(() => { if (!isGameOver) generateProblem(); }, 1300);
+    nextTimer = setTimeout(() => { nextTimer = null; if (!isGameOver) generateProblem(); }, 1300);
   }
 
   function handleFailure(hint) {
