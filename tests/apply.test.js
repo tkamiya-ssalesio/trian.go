@@ -19,7 +19,7 @@ const T = A.TABLE;
 
 // 2. プリントの解答
 // 1：木 10 m，21°，目の高さ 1.6 m → 5.4 m
-const tree = A._LENGTH.tree(seq([0, 4], [2, 8], [6, 41], [2, 4]));
+const tree = A._LENGTH.tree(seq([0, 4], [2, 5], [6, 36], [2, 4]));
 ok(/10 m/.test(tree.text) && /21°/.test(tree.text) && /1\.6 m/.test(tree.text), 'プリント1の問題文 ' + tree.text);
 ok(A.answerText(tree) === '5.4 m', 'プリント1 = 5.4 m: ' + A.answerText(tree));
 // 2：高さ 20 m，32° → 32 m
@@ -31,10 +31,10 @@ const up = A._LENGTH.slopeUp(seq([2, 8], [14, 26]));
 const ac = A._LENGTH.slopeAcross(seq([2, 8], [14, 26]));
 ok(A.answerText(up) === '33 m' && A.answerText(ac) === '95 m', 'プリント3 = 33 m, 95 m: ' + A.answerText(up) + ' ' + A.answerText(ac));
 // 4：1/15 → 3° 以下
-const ramp = A._ANGLE.rampLimit(seq([9, 25]));
+const ramp = A._ANGLE.rampLimit(seq([0, 3]));
 ok(/frac\{1\}\{15\}/.test(ramp.text) && A.answerText(ramp) === '3° 以下', 'プリント4 = 3° 以下: ' + A.answerText(ramp));
 // 5：23 % → 13°，18 ‰ → 1°
-const g = A._ANGLE.grade(seq([20, 43]));
+const g = A._ANGLE.grade(seq([20, 23]));
 ok(/23 %/.test(g.text) && A.answerText(g) === '約 13°', 'プリント5(1) = 13°: ' + A.answerText(g));
 const pm = A._ANGLE.permil(seq([13, 66]));
 ok(/18 ‰/.test(pm.text) && A.answerText(pm) === '約 1°', 'プリント5(2) = 1°: ' + A.answerText(pm));
@@ -47,6 +47,10 @@ ok(st(tree, '５．４') === 'correct', '全角も読む');
 ok(st(tree, '5.40') === 'correct', '末尾の 0 は気にしない');
 ok(st(tree, '5.44') === 'form', '桁が多いのは書き方ミス');
 ok(st(tree, '5') === 'form', '小数第1位まで答えていない');
+ok(st(tree, '5.4m') === 'correct' && st(tree, '5.4 ｍ') === 'correct', '単位を書いてもよい');
+const foot = A._LENGTH.ladderFoot(seq([0, 6], [25, 26]));
+ok(A.answerText(foot) === '0.5 m' && st(foot, '.5') === 'correct' && st(foot, '0.5') === 'correct', '「.5」も読む ' + A.answerText(foot));
+ok(st(g, '13°') === 'correct' && st(g, '13度') === 'correct', '角度に ° や 度 を書いてもよい');
 ok(A.judgeApply(tree, '3.8').hint === '目の高さを足しましたか？', '目の高さの足し忘れに案内');
 ok(st(tree, '') === 'empty' && st(tree, 'abc') === 'invalid' && st(tree, '5..4') === 'invalid', '空欄と入力ミス');
 ok(st(dep, '32') === 'correct' && st(dep, '31') === 'correct' && st(dep, '34') === 'wrong', 'プリント2 の許容');
@@ -56,6 +60,9 @@ ok(st(up, '33') === 'correct' && st(up, '95') === 'wrong' && /sin/.test(A.judgeA
 ok(st(g, '13') === 'correct' && st(g, '14') === 'form' && st(g, '12') === 'form' && st(g, '20') === 'wrong', '角度：最も近い角だけ正解');
 ok(st(g, '13.5') === 'invalid', '角度は整数');
 ok(st(ramp, '3') === 'correct' && st(ramp, '4') === 'wrong' && /以下/.test(A.judgeApply(ramp, '4').hint), '以下の問題');
+ok(st(ramp, '2') === 'form' && /最大/.test(A.judgeApply(ramp, '2').hint), '以下の問題で小さい角は「最大の角」の案内');
+ok(/屋外/.test(ramp.text) && /基準がある/.test(ramp.text), '1/15 は実在の基準（屋外）');
+for (let i = 0; i < 200; i++) { const r = A._ANGLE.rampLimit(Math.random); if (/基準がある/.test(r.text)) ok([12, 15].indexOf(r.answer.d) >= 0, '実在しない基準を事実として書かない ' + r.text); }
 
 // 4. 総当たり：たくさん作って，答え・解説・図が崩れていないか
 const cnt = { applyLen: { sin: 0, cos: 0, tan: 0 }, applyAng: { sin: 0, cos: 0, tan: 0 } };
@@ -72,6 +79,8 @@ for (const cat of ['applyLen', 'applyAng', 'applyMix']) {
     const a = p.answer;
     if (a.kind === 'length') {
       ok(a.base > 0, '答えは正 ' + p.id);
+      ok(!A.mistakeOverlaps(a), 'よくある誤りが正解の幅に入る ' + p.id);
+      if (a.digits === 1) ok(st(p, String(Math.round(a.base / 10))) !== 'correct', '整数で答えたら正解にしない ' + p.id);
       // 基準の答えそのもの，±1 は正解．±3 は不正解
       const s = A.unitsStr(a.base, a.digits);
       ok(st(p, s) === 'correct', `基準の答え ${s} が正解にならない ${p.id}`);

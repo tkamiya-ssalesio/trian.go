@@ -50,10 +50,12 @@
     if (str === null || str === undefined) return { empty: true };
     const s = String(str)
       .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
-      .replace(/[．。]/g, '.').replace(/\s/g, '');
+      .replace(/[．。]/g, '.').replace(/\s/g, '')
+      .replace(/(m|ｍ|°|度)$/, '');          // 単位を書いてもよい
     if (s === '') return { empty: true };
-    if (!/^\d+(\.\d+)?$/.test(s)) return { invalid: true };
-    const [ip, fp = ''] = s.split('.');
+    if (!/^(\d+\.?\d*|\.\d+)$/.test(s)) return { invalid: true }; // 「.5」「5.」も読む
+    let [ip, fp = ''] = s.split('.');
+    if (ip === '') ip = '0';
     return { int: ip, frac: fp, value: parseFloat(s) };
   }
   // 書いた答えを digits 桁の単位に直す．桁が多すぎるときは extra に余分な桁を入れる
@@ -243,19 +245,20 @@
   // ============================================================
   // 長さを求める型
   // ============================================================
+  // 対象ごとに距離と角度の範囲を分け，高さが現実的になるようにする
   const OBJ = [
-    { n: '木', foot: '木の根もと', top: '木の先端' },
-    { n: '電柱', foot: '電柱の根もと', top: '電柱の先端' },
-    { n: '旗ざお', foot: '旗ざおの根もと', top: '旗ざおの先端' },
-    { n: '塔', foot: '塔の真下の地点', top: '塔の先端' }
+    { n: '木', foot: '木の根もと', top: '木の先端', ds: [6, 8, 10, 12, 15], th: [15, 50] },
+    { n: '電柱', foot: '電柱の根もと', top: '電柱の先端', ds: [6, 8, 10, 12, 15], th: [15, 50] },
+    { n: '旗ざお', foot: '旗ざおの根もと', top: '旗ざおの先端', ds: [5, 6, 8, 10, 12], th: [15, 45] },
+    { n: '塔', foot: '塔の根もと', top: '塔の先端', ds: [20, 25, 30, 40, 50], th: [15, 55] }
   ];
 
   const LENGTH = {
     // tan：目の高さを足す（プリント1）
     tree(rng) {
       const o = pick(rng, OBJ);
-      const d = pick(rng, [6, 8, 10, 12, 15, 20, 25, 30]);
-      const th = randInt(rng, 15, 55);
+      const d = pick(rng, o.ds);
+      const th = randInt(rng, o.th[0], o.th[1]);
       const h10 = pick(rng, [14, 15, 16, 17]);
       const h = h10 / 10;
       const tn = TABLE.tan[th];
@@ -272,7 +275,7 @@
       });
       return {
         fn: 'tan', id: 'tree',
-        text: `${o.foot}から水平に ${d} m 離れた地点に立って${o.top}を見上げると，水平面となす角が ${th}° であった．目の高さを ${fmtM(h)} m として，${o.n}の高さを求めよ．ただし，小数第2位を四捨五入せよ．`,
+        text: `${o.foot}から水平に ${d} m 離れた地点に立って${o.top}を見上げたときの仰角（視線と水平面のなす角）が ${th}° であった．目の高さを ${fmtM(h)} m として，${o.n}の高さを求めよ．ただし，小数第2位を四捨五入せよ．`,
         answer: ans,
         lines: [
           `\\mathrm{BC} = \\mathrm{AC}\\tan ${th}^\\circ = ${d} \\times ${t4(tn)} = ${decStr(bc, 10000)}`,
@@ -285,7 +288,7 @@
     shadow(rng) {
       const o = pick(rng, OBJ.slice(0, 3));
       const d = pick(rng, [3, 4, 5, 6, 8, 10, 12]);
-      const th = randInt(rng, 20, 65);
+      const th = randInt(rng, 20, 55);
       const tn = TABLE.tan[th];
       const ans = lengthAnswer({
         digits: 1, label: o.n + 'の高さ', num: d * tn, den: 10000,
@@ -317,15 +320,15 @@
       });
       const lighthouse = rng() < 0.5;
       const text = lighthouse
-        ? `海面からの高さ ${Hm} m の灯台の上の地点 A から船 B を見下ろすと，その角は水平面に対して ${al}° であった．船 B は，A の真下の海面の地点 C から何 m 離れているか．1 m 未満を四捨五入して求めよ．`
-        : `地上からの高さ ${Hm} m の地点 A から地上の地点 B を見下ろしたら，その角は水平面に対して ${al}° であった．B は，A の真下の地点 C から何 m 離れているか．1 m 未満を四捨五入して求めよ．`;
+        ? `灯台の頂上の地点 A（海面からの高さ ${Hm} m）から船 B を見下ろしたときの俯角（視線と水平面のなす角）が ${al}° であった．船 B は，A の真下の海面の地点 C から何 m 離れているか．1 m 未満を四捨五入して求めよ．`
+        : `地上からの高さ ${Hm} m の地点 A から地上の地点 B を見下ろしたときの俯角（視線と水平面のなす角）が ${al}° であった．B は，A の真下の地点 C から何 m 離れているか．1 m 未満を四捨五入して求めよ．`;
       return {
         fn: 'tan', id: 'depression', text, answer: ans,
         lines: [
           `\\angle \\mathrm{BAC} = 90^\\circ - ${al}^\\circ = ${co}^\\circ`,
           `\\mathrm{BC} = \\mathrm{AC}\\tan ${co}^\\circ = ${Hm} \\times ${t4(tn)} = ${decStr(Hm * tn, 10000)} \\fallingdotseq ${ans.base}`
         ],
-        note: `${Hm} ÷ tan ${al}° で求めても正解です．`,
+        note: `∠ABC = ${al}°（錯角）なので，AC = BC tan ${al}° より BC = ${Hm} ÷ tan ${al}° と求めてもよい．`,
         scene: depressionScene(al, { theta: al + '^\\circ', opp: Hm + '\\,\\mathrm{m}', adj: '?' })
       };
     },
@@ -356,7 +359,7 @@
       });
       return {
         fn: 'sin', id: 'kite',
-        text: `長さ ${L} m の糸で凧をあげたところ，糸と地面のなす角が ${th}° になった．凧の高さは何 m か．ただし，糸はまっすぐに張っていて，糸の端は地面にあるものとする．小数第2位を四捨五入して答えよ．`,
+        text: `長さ ${L} m の糸で凧をあげたところ，糸と地面のなす角が ${th}° になった．凧の高さは何 m か．ただし，糸はまっすぐに張っていて，手もとの糸の端は地面の高さにあるものとする．小数第2位を四捨五入して答えよ．`,
         answer: ans,
         lines: [`\\mathrm{BC} = \\mathrm{AB}\\sin ${th}^\\circ = ${L} \\times ${t4(v)} = ${decStr(L * v, 10000)} \\fallingdotseq ${unitsStr(ans.base, 1)}`],
         scene: riseScene(th, { theta: th + '^\\circ', hyp: L + '\\,\\mathrm{m}', opp: '?' })
@@ -369,7 +372,7 @@
     // cos：エスカレーターの水平の長さ
     escalator(rng) {
       const L = pick(rng, [12, 15, 18, 20, 24, 30]);
-      const th = randInt(rng, 25, 35);
+      const th = randInt(rng, 25, 30);
       const v = TABLE.cos[th];
       const ans = lengthAnswer({
         digits: 1, label: '水平方向の長さ', num: L * v, den: 10000,
@@ -447,7 +450,7 @@
     if (ansObj.mode === 'floor') {
       return {
         lines: [`${lhs} \\leqq ${frac} = ${dec}`, `\\${fn} ${a}^\\circ = ${t4(T[a])},\\ \\ \\${fn} ${a + 1}^\\circ = ${t4(T[a + 1])}`],
-        conclusion: `${a + 1}° では基準を超えるので，${a}° 以下にしなければならない．`
+        conclusion: `${a + 1}° では条件を超えるので，${a}° 以下にしなければならない．`
       };
     }
     // 比の値をはさむ2つの角
@@ -464,7 +467,7 @@
     // tan：百分率の勾配（プリント5(1)）
     grade(rng) {
       let p;
-      do { p = randInt(rng, 3, 45); } while (!angleClear('tan', p, 100, 'nearest'));
+      do { p = randInt(rng, 3, 25); } while (!angleClear('tan', p, 100, 'nearest'));
       const ans = angleAnswer('tan', p, 100, 'nearest');
       const ex = angleExplain('tan', p, 100, ans);
       return {
@@ -491,13 +494,19 @@
     },
     // tan：基準「1/n 以下」から何度以下（プリント4）
     rampLimit(rng) {
-      let n;
-      do { n = randInt(rng, 6, 30); } while (!angleClear('tan', 1, n, 'floor'));
+      // 実在する基準（屋外 1/15，屋内 1/12）だけを「基準がある」と書き，ほかは「〜にしたい」と仮定の形にする
+      const c = pick(rng, [
+        { n: 15, lead: '車いす用に屋外に設置するスロープについて，その勾配は $\\frac{1}{15}$ 以下にするという基準がある．' },
+        { n: 12, lead: '車いす用に屋内に設置するスロープについて，その勾配は $\\frac{1}{12}$ 以下にするという基準がある．' },
+        { n: pick(rng, [8, 10, 20, 25]), lead: null }
+      ]);
+      const n = c.n;
+      const lead = c.lead || `ある坂道をつくるとき，その勾配を $\\frac{1}{${n}}$ 以下にしたい．`;
       const ans = angleAnswer('tan', 1, n, 'floor');
       const ex = angleExplain('tan', 1, n, ans);
       return {
         fn: 'tan', id: 'rampLimit',
-        text: `車いす用に屋外に設置するスロープについて，その勾配は $\\frac{1}{${n}}$ 以下にするという基準がある．スロープの傾斜角を 1 度単位で設定する場合，この基準を満たすには，傾斜角は何度以下にしなければならないか．ここで，勾配とは，水平方向に 1 進むときに鉛直方向に上がる高さを表す．`,
+        text: `${lead}傾斜角を 1 度単位で設定する場合，この条件を満たすには，傾斜角は何度以下にしなければならないか．ここで，勾配とは，水平方向に 1 進むときに鉛直方向に上がる高さを表す．`,
         answer: Object.assign(ans, { label: '傾斜角' }),
         lines: ex.lines, conclusion: ex.conclusion,
         scene: riseScene(Math.atan(1 / n) / RAD, { theta: '\\theta', adj: String(n), opp: '1' })
@@ -539,7 +548,7 @@
       const ex = angleExplain('sin', h, L, ans);
       return {
         fn: 'sin', id: 'kiteAngle',
-        text: `長さ ${L} m の糸で凧をあげたところ，凧の高さが ${h} m になった．糸と地面のなす角は約何度か．ただし，糸はまっすぐに張っていて，糸の端は地面にあるものとする．三角比の表を用いて答えよ．`,
+        text: `長さ ${L} m の糸で凧をあげたところ，凧の高さが ${h} m になった．糸と地面のなす角は約何度か．ただし，糸はまっすぐに張っていて，手もとの糸の端は地面の高さにあるものとする．三角比の表を用いて答えよ．`,
         answer: Object.assign(ans, { label: '糸と地面のなす角' }),
         lines: ex.lines, conclusion: ex.conclusion,
         scene: riseScene(Math.asin(h / L) / RAD, { theta: '\\theta', hyp: L + '\\,\\mathrm{m}', opp: h + '\\,\\mathrm{m}' })
@@ -586,6 +595,10 @@
     tan: ['grade', 'permil', 'rampLimit', 'sunAngle']
   };
 
+  function mistakeOverlaps(a) {
+    return a.alts.some(alt => a.accepts.some(b => Math.abs(alt.units - b) <= 2));
+  }
+
   // category: 'applyLen' | 'applyAng' | 'applyMix'
   // sin・cos・tan を同じ割合で選んでから，その三角比を使う型を選ぶ
   function generateApply(category, rng) {
@@ -593,7 +606,12 @@
     const type = category === 'applyLen' ? 'length' : category === 'applyAng' ? 'angle' : (rng() < 0.5 ? 'length' : 'angle');
     const fn = pick(rng, ['sin', 'cos', 'tan']);
     const id = pick(rng, (type === 'length' ? LENGTH_BY_FN : ANGLE_BY_FN)[fn]);
-    const p = (type === 'length' ? LENGTH : ANGLE)[id](rng);
+    let p;
+    // よくある誤り（三角比の取り違え・目の高さの足し忘れなど）が ±1 の幅に入る問題は出さない
+    for (let i = 0; i < 60; i++) {
+      p = (type === 'length' ? LENGTH : ANGLE)[id](rng);
+      if (type !== 'length' || !mistakeOverlaps(p.answer)) break;
+    }
     return Object.assign(p, { kind: 'apply', type, category });
   }
 
@@ -611,7 +629,8 @@
       if (p.frac.replace(/0+$/, '') !== '') return { status: 'invalid', hint: '角度は整数で答えてください．' };
       const v = parseInt(p.int, 10);
       if (v === a.ans) return { status: 'correct', hint: '' };
-      if (a.mode === 'floor' && v === a.ans + 1) return { status: 'wrong', hint: `${v}° では基準を超えます．「以下」なので，基準を超えない最大の角を選びましょう．` };
+      if (a.mode === 'floor' && v === a.ans + 1) return { status: 'wrong', hint: `${v}° では条件を超えます．「以下」なので，条件を超えない最大の角を選びましょう．` };
+      if (a.mode === 'floor' && v < a.ans) return { status: 'form', hint: 'その角でも条件は満たしますが，条件を超えない最大の角を答えましょう．' };
       if (Math.abs(v - a.ans) === 1) return { status: 'form', hint: '表で前後の角の値と比べて，より近いほうを選びましょう．' };
       if (v >= 90 || v === 0) return { status: 'wrong', hint: '' };
       // 別の三角比で表を引いた
@@ -624,6 +643,12 @@
       return { status: 'wrong', hint: '' };
     }
     // 長さ
+    // 小数第1位まで答える問題で小数点のない答え（例：5）は，四捨五入の位違い
+    if (a.digits === 1 && p.frac.replace(/0+$/, '') === '' && String(input).indexOf('.') < 0 && !/[．。]/.test(String(input))) {
+      const v = parseInt(p.int, 10);
+      if (Math.abs(v * 10 - a.base) <= 10) return { status: 'form', hint: '小数第2位を四捨五入して，小数第1位まで答えましょう（例：5.0）．' };
+      return { status: 'wrong', hint: '' };
+    }
     const u = toUnits(p, a.digits);
     if (u.over) {
       // 桁を多く書いた：四捨五入すれば正解なら書き方ミス
@@ -634,10 +659,6 @@
       return { status: 'wrong', hint: '' };
     }
     if (a.accepts.some(b => Math.abs(u.units - b) <= 1)) return { status: 'correct', hint: '' };
-    // 四捨五入する位をまちがえた（小数第1位まで答えるところを整数で）
-    if (a.digits === 1 && p.frac === '' && Math.abs(parseInt(p.int, 10) - Math.round(a.exact)) <= 0 && Math.abs(u.units - a.base) > 1) {
-      return { status: 'form', hint: '小数第2位を四捨五入して，小数第1位まで答えましょう．' };
-    }
     for (const alt of a.alts) {
       if (Math.abs(u.units - alt.units) <= 1) return { status: 'wrong', hint: alt.hint };
     }
@@ -654,7 +675,7 @@
   return {
     TABLE, t4, roundUnits, unitsStr, decStr, parseAnswer,
     angleAnswer, angleClear, generateApply, judgeApply, answerText, sceneLayout, riseScene, depressionScene, texWidth,
-    LENGTH_BY_FN, ANGLE_BY_FN, W, H,
+    LENGTH_BY_FN, ANGLE_BY_FN, W, H, mistakeOverlaps,
     _LENGTH: LENGTH, _ANGLE: ANGLE
   };
 }));

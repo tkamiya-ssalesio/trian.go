@@ -532,15 +532,16 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="tutorial-slide">
             <p><b>どの三角比を使う？</b></p>
             <ul class="term-list">
-              <li><b>正弦（sine）</b>：${T('\\sin\\theta')}．斜辺と高さを結ぶ．</li>
-              <li><b>余弦（cosine）</b>：${T('\\cos\\theta')}．斜辺と底辺を結ぶ．</li>
-              <li><b>正接（tangent）</b>：${T('\\tan\\theta')}．底辺と高さを結ぶ．</li>
+              <li><b>正弦（sine）</b>：${D('\\sin\\theta = \\frac{\\text{向かい}}{\\text{斜辺}}')}</li>
+              <li><b>余弦（cosine）</b>：${D('\\cos\\theta = \\frac{\\text{となり}}{\\text{斜辺}}')}</li>
+              <li><b>正接（tangent）</b>：${D('\\tan\\theta = \\frac{\\text{向かい}}{\\text{となり}}')}</li>
             </ul>
-            <div class="figure figure-small">${sceneFigureHTML(AP.riseScene(30, { theta: '\\theta', hyp: '\\text{斜辺}', opp: '\\text{高さ}', adj: '\\text{底辺}' }))}</div>
-            <div class="math-line">${D('\\text{高さ} = \\text{斜辺} \\times \\sin\\theta')}</div>
-            <div class="math-line">${D('\\text{底辺} = \\text{斜辺} \\times \\cos\\theta')}</div>
-            <div class="math-line">${D('\\text{高さ} = \\text{底辺} \\times \\tan\\theta')}</div>
-            <p class="note">わかっている辺と求めたい辺の組で決まります．定義 ${T('\\sin\\theta = \\frac{\\mathrm{BC}}{\\mathrm{AB}}')} の両辺に AB をかけると ${T('\\mathrm{BC} = \\mathrm{AB}\\sin\\theta')} です．</p>
+            <div class="figure figure-small">${sceneFigureHTML(AP.riseScene(30, { theta: '\\theta', hyp: '\\text{斜辺}', opp: '\\text{向かい}', adj: '\\text{となり}' }))}</div>
+            <p class="note">両辺に分母をかけると，長さを求める式になります．</p>
+            <div class="math-line">${D('\\text{向かい} = \\text{斜辺} \\times \\sin\\theta')}</div>
+            <div class="math-line">${D('\\text{となり} = \\text{斜辺} \\times \\cos\\theta')}</div>
+            <div class="math-line">${D('\\text{向かい} = \\text{となり} \\times \\tan\\theta')}</div>
+            <p class="note">「向かい」は θ の向かい側の辺，「となり」は θ をはさむ辺のうち斜辺でない方です．高さか水平かではなく，<b>θ との位置</b>で見分けます．見下ろす問題では，三角形の中の角 ${T('\\angle\\mathrm{BAC}')} の向かいが水平の辺 BC になります．</p>
           </div>`,
         () => {
           const rows = [12, 13, 14, 15].map(t => `<tr${t === 13 ? ' class="hl"' : ''}><td>${t}°</td><td>${AP.t4(AP.TABLE.sin[t])}</td><td>${AP.t4(AP.TABLE.cos[t])}</td><td>${AP.t4(AP.TABLE.tan[t])}</td></tr>`).join('');
