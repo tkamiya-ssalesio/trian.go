@@ -163,11 +163,13 @@
     if ((numRoot && b === 1) || (denRoot && d === 1)) {
       return { status: 'form', hint: '√1 は 1 です．√ を外しましょう．' };
     }
-    if (numRoot && denRoot) {
-      return { status: 'form', hint: '√ は分子か分母の片方だけにまとめましょう．' };
-    }
     if (!isSquarefree(b) || !isSquarefree(d)) {
       return { status: 'form', hint: '√ の中をもっと簡単にできます（例：√8 = 2√2）．' };
+    }
+    // 分子・分母の両方に √（例：√3/√5）は，有理化しなくても正解．
+    // ただし √6/√10 のように √ どうし，または数と √ でまだ約分できるものは書き方ミス
+    if (numRoot && denRoot && (gcd(b, d) > 1 || gcd(b, c) > 1)) {
+      return { status: 'form', hint: 'まだ約分できます（例：√6/√10 = √3/√5）．' };
     }
     if (frac && c === 1 && !denRoot) {
       return { status: 'form', hint: '分母が 1 なら分数にしないで書きましょう．' };
@@ -210,15 +212,14 @@
     return dd === 1 ? numTex : '\\frac{' + numTex + '}{' + dd + '}';
   }
 
-  // 分子・分母をそのまま約分した形（有理化しない形）．有理化した形と同じなら null
+  // 有理化しない形（2/√5，√3/√5 など）．値の2乗 n2/d2 を約分してから分子・分母を簡単にする．
+  // 分母に √ が残らない（有理化した形と同じ）なら null
   function naturalTex(n2, d2) {
-    const A = simplifySqrt(n2), D = simplifySqrt(d2);
-    if (D.m === 1) return null; // 分母に √ がない → 有理化した形と同じ
-    if (A.m !== 1) return null; // 分子にも √ → この形は使わない
-    let a = A.k, c = D.k;
-    const g = gcd(a, c); a /= g; c /= g;
-    if (gcd(a, D.m) > 1) return null;
-    return '\\frac{' + a + '}{' + (c === 1 ? '' : c) + '\\sqrt{' + D.m + '}}';
+    const g = gcd(n2, d2);
+    const A = simplifySqrt(n2 / g), D = simplifySqrt(d2 / g);
+    if (D.m === 1) return null;
+    const num = A.m === 1 ? String(A.k) : (A.k === 1 ? '' : A.k) + '\\sqrt{' + A.m + '}';
+    return '\\frac{' + num + '}{' + (D.k === 1 ? '' : D.k) + '\\sqrt{' + D.m + '}}';
   }
 
   function ratioLines(prob) {
@@ -234,7 +235,8 @@
       const nat = naturalTex(n2, d2);
       const raw = '\\frac{' + S[nk] + '}{' + S[dk] + '}';
       let tex = '\\' + fn + '\\theta = \\frac{\\mathrm{' + nn + '}}{\\mathrm{' + dn + '}} = ' + raw;
-      if (nat && nat !== raw) tex += ' = ' + nat;
+      const denHasRoot = simplifySqrt(d2).m !== 1; // 分母がもともと整数なら，有理化しない形は書かない
+      if (nat && denHasRoot && nat !== raw) tex += ' = ' + nat;
       if (best !== raw && best !== nat) tex += ' = ' + best;
       return { fn, tex, alt: nat };
     });

@@ -455,7 +455,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <tr><td>約分する</td><td>${D('\\frac{8}{10}')}</td><td>${D('\\frac{4}{5}')}</td></tr>
               <tr><td>√ の中を簡単に</td><td>${D('\\sqrt{8}')}</td><td>${D('2\\sqrt{2}')}</td></tr>
               <tr><td>分母が 1 なら整数に</td><td>${D('\\frac{\\sqrt{3}}{1}')}</td><td>${D('\\sqrt{3}')}</td></tr>
-              <tr><td>有理化は自由</td><td>―</td><td>${D('\\frac{2}{\\sqrt{5}}')} も ${D('\\frac{2\\sqrt{5}}{5}')} も○</td></tr>
+              <tr><td>√ どうしも約分する</td><td>${D('\\frac{\\sqrt{6}}{\\sqrt{10}}')}</td><td>${D('\\frac{\\sqrt{3}}{\\sqrt{5}}')}</td></tr>
+              <tr><td>有理化は自由</td><td>―</td><td>${D('\\frac{2}{\\sqrt{5}}')} も ${D('\\frac{2\\sqrt{5}}{5}')} も○<br>${D('\\frac{\\sqrt{3}}{\\sqrt{5}}')} も ${D('\\frac{\\sqrt{15}}{5}')} も○</td></tr>
             </table>
           </div>`,
         () => `
