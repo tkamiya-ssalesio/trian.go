@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const C = window.TrianCore;
+  const AP = window.TrianApply;
+  const isApply = cat => cat.indexOf('apply') === 0;
 
   // --- State ---
   let currentCategory = 'three';
@@ -40,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statsRight = $('stats-right');
   const problemPrompt = $('problem-prompt');
   const figure = $('figure');
+  const showFigureBtn = $('show-figure-btn');
   const answerList = $('answer-list');
   const explainBox = $('explain-box');
   const judgeBtn = $('judge-btn');
@@ -109,6 +112,26 @@ document.addEventListener('DOMContentLoaded', () => {
     return svg + labels;
   }
 
+  // --- 三角比の活用の図（apply.js の sceneLayout を描くだけ） ---
+  function sceneFigureHTML(scene) {
+    const L = AP.sceneLayout(scene);
+    const f = v => v.toFixed(1), pt = p => f(p[0]) + ',' + f(p[1]);
+    let svg = `<svg viewBox="0 0 ${AP.W} ${AP.H}" aria-hidden="true">`;
+    L.polys.forEach(q => { svg += `<polygon points="${q.pts.map(pt).join(' ')}" class="${q.cls}"/>`; });
+    const a = L.arc;
+    svg += `<path d="M ${pt(a.A)} L ${pt(a.start)} A ${a.r} ${a.r} 0 0 ${a.sweep} ${pt(a.end)} Z" class="theta-fill"/>`;
+    svg += `<path d="M ${pt(a.start)} A ${a.r} ${a.r} 0 0 ${a.sweep} ${pt(a.end)}" class="theta-arc"/>`;
+    svg += `<polyline points="${L.right.map(pt).join(' ')}" class="right-mark"/>`;
+    L.lines.forEach(l => { svg += `<line x1="${f(l.p[0])}" y1="${f(l.p[1])}" x2="${f(l.q[0])}" y2="${f(l.q[1])}" class="${l.cls}"/>`; });
+    svg += '</svg>';
+    const pos = p => `left:${(p[0] / AP.W * 100).toFixed(2)}%;top:${(p[1] / AP.H * 100).toFixed(2)}%`;
+    const labels = L.labels.map(l => `<div class="lbl ${l.cls}" style="${pos(l.p)}">${T(l.tex)}</div>`).join('');
+    return svg + labels;
+  }
+
+  // 問題文の $...$ を数式に
+  const richText = text => text.replace(/\$([^$]+)\$/g, (m, tex) => T(tex));
+
   // --- Answer inputs ---
   const RATIO_ROWS = [
     { key: 'sin', tex: '\\sin\\theta =' },
@@ -140,6 +163,23 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="toggle-btn" data-toggle="frac">分数</button>
             <button type="button" class="toggle-btn" data-toggle="numRoot">√</button>
             <button type="button" class="toggle-btn hidden" data-toggle="denRoot">分母に√</button>
+          </div>
+        </div>
+        <div class="ans-mark"></div>
+      </div>`;
+  }
+
+  // 三角比の活用：数を1つ答える欄（約 □ °／□ m）
+  function numRowHTML(a) {
+    const pre = a.kind === 'angle' && a.mode === 'nearest' ? '<span class="num-affix">約</span>' : '';
+    const unit = a.kind === 'angle' ? '°' + (a.mode === 'floor' ? ' 以下' : '') : a.unit;
+    return `
+      <div class="ans-row ans-row-num" data-kind="num">
+        <div class="ans-label ans-label-text">${a.label}</div>
+        <div class="ans-body">
+          <div class="ans-value num-value">
+            ${pre}<input type="text" inputmode="decimal" autocomplete="off" maxlength="8" class="val-input val-num" data-role="v">
+            <span class="num-affix">${unit}</span>
           </div>
         </div>
         <div class="ans-mark"></div>
@@ -474,6 +514,61 @@ document.addEventListener('DOMContentLoaded', () => {
             <p class="note">Enter キーでも判定できます．</p>
           </div>`
       ]
+    },
+    apply: {
+      title: '三角比の活用',
+      slides: [
+        () => `
+          <div class="tutorial-slide">
+            <p><b>見上げる角・見下ろす角</b></p>
+            <ul class="term-list">
+              <li><b>仰角（angle of elevation）</b>：見上げたときの，視線と水平面のなす角．</li>
+              <li><b>俯角（angle of depression）</b>：見下ろしたときの，視線と水平面のなす角．</li>
+            </ul>
+            <div class="figure figure-small">${sceneFigureHTML(AP.depressionScene(32, { theta: '32^\\circ', opp: '20\\,\\mathrm{m}', adj: '?' }))}</div>
+            <p class="note">A から B を見下ろす角が ${T('32^\\circ')} のとき，三角形の中の角 ${T('\\angle\\mathrm{BAC}')} は ${T('90^\\circ - 32^\\circ = 58^\\circ')} です．どの角が直角三角形の角なのかを図で確かめましょう．</p>
+          </div>`,
+        () => `
+          <div class="tutorial-slide">
+            <p><b>どの三角比を使う？</b></p>
+            <ul class="term-list">
+              <li><b>正弦（sine）</b>：${T('\\sin\\theta')}．斜辺と高さを結ぶ．</li>
+              <li><b>余弦（cosine）</b>：${T('\\cos\\theta')}．斜辺と底辺を結ぶ．</li>
+              <li><b>正接（tangent）</b>：${T('\\tan\\theta')}．底辺と高さを結ぶ．</li>
+            </ul>
+            <div class="figure figure-small">${sceneFigureHTML(AP.riseScene(30, { theta: '\\theta', hyp: '\\text{斜辺}', opp: '\\text{高さ}', adj: '\\text{底辺}' }))}</div>
+            <div class="math-line">${D('\\text{高さ} = \\text{斜辺} \\times \\sin\\theta')}</div>
+            <div class="math-line">${D('\\text{底辺} = \\text{斜辺} \\times \\cos\\theta')}</div>
+            <div class="math-line">${D('\\text{高さ} = \\text{底辺} \\times \\tan\\theta')}</div>
+            <p class="note">わかっている辺と求めたい辺の組で決まります．定義 ${T('\\sin\\theta = \\frac{\\mathrm{BC}}{\\mathrm{AB}}')} の両辺に AB をかけると ${T('\\mathrm{BC} = \\mathrm{AB}\\sin\\theta')} です．</p>
+          </div>`,
+        () => {
+          const rows = [12, 13, 14, 15].map(t => `<tr${t === 13 ? ' class="hl"' : ''}><td>${t}°</td><td>${AP.t4(AP.TABLE.sin[t])}</td><td>${AP.t4(AP.TABLE.cos[t])}</td><td>${AP.t4(AP.TABLE.tan[t])}</td></tr>`).join('');
+          return `
+          <div class="tutorial-slide">
+            <p><b>三角比の表の引き方</b></p>
+            <table class="rule-table mini-table">
+              <tr><th>θ</th><th>sin</th><th>cos</th><th>tan</th></tr>
+              ${rows}
+            </table>
+            <ul class="term-list">
+              <li><b>長さを求める</b>：角の行で，使う三角比の列を読む．例 ${T('\\tan 13^\\circ = 0.2309')}</li>
+              <li><b>角度を求める</b>：使う三角比の列で，比の値に最も近い値を探す．例 ${T('\\tan\\theta = 0.23')} なら ${T('0.2309')} と ${T('0.2493')} では ${T('0.2309')} が近いので 約 13°</li>
+              <li><b>「〜以下」</b>：基準を超えない最大の角．例 ${T('\\tan\\theta \\leqq 0.0666\\cdots')} なら ${T('\\tan 3^\\circ = 0.0524')}，${T('\\tan 4^\\circ = 0.0699')} より 3° 以下</li>
+            </ul>
+          </div>`;
+        },
+        () => `
+          <div class="tutorial-slide">
+            <p><b>答え方</b></p>
+            <ul class="term-list">
+              <li>四捨五入する位を問題文で確かめます．「小数第2位を四捨五入」なら小数第1位まで，「1 m 未満を四捨五入」なら整数で答えます．</li>
+              <li>表の値は4桁の近似値なので，計算の途中で丸めると答えが少しずれます．<b>最後の桁が ±1 ずれても正解</b>です（例：5.4 m なら 5.3〜5.5 は○）．</li>
+              <li>角度は整数で答えます．「約」は入力しなくてかまいません．</li>
+              <li>図が描けないときは「📐 図を見る」で図を出せます．まずは自分で図を描いてみましょう．</li>
+            </ul>
+          </div>`
+      ]
     }
   };
 
@@ -510,7 +605,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const CAT = {
     three: { name: '① 3辺がわかる三角形', label: '🔰 3辺', desc: '3辺の長さがわかっている直角三角形で，sin θ，cos θ，tan θ の値を求めます．三角形の向きは毎回変わります．' },
     two: { name: '② 2辺から求める', label: '📏 2辺から', desc: '「?」の辺の長さを三平方の定理で求めて入力し，それから sin θ，cos θ，tan θ の値を求めます．' },
-    mix: { name: '③ ミックス', label: '🔀 ミックス', desc: '①と②がランダムに出題されます．' }
+    mix: { name: '③ ミックス', label: '🔀 ミックス', desc: '①と②がランダムに出題されます．' },
+    applyLen: { name: '④ 長さを求める', label: '📐 活用：長さ' },
+    applyAng: { name: '⑤ 角度を求める', label: '🧭 活用：角度' },
+    applyMix: { name: '⑥ 活用ミックス', label: '🎯 活用ミックス' }
   };
   const MODE = {
     practice: { name: '練習モード', desc: '時間制限はありません．間違えたら「解説を見る」で確認できます．連続正解記録を伸ばしましょう．' },
@@ -614,21 +712,36 @@ document.addEventListener('DOMContentLoaded', () => {
     lastWrongKey = null;
     judgeBtn.disabled = false;
     let prob;
-    // 直前と同じ三角形が続かないように
-    do { prob = C.generateProblem(currentCategory, Math.random, { fixed: fixedOrient }); }
-    while (currentProblem && prob.opp2 === currentProblem.opp2 && prob.adj2 === currentProblem.adj2);
-    currentProblem = prob;
-
-    if (prob.hidden) {
-      problemPrompt.innerHTML = `「?」の辺 ${C.SIDE_NAME[prob.hidden]} の長さを求めてから，${T('\\sin\\theta')}，${T('\\cos\\theta')}，${T('\\tan\\theta')} の値を求めなさい．`;
+    if (isApply(currentCategory)) {
+      // 三角比の活用：文章だけ出し，図はボタンで
+      do { prob = AP.generateApply(currentCategory); }
+      while (currentProblem && currentProblem.text === prob.text);
+      currentProblem = prob;
+      problemPrompt.innerHTML = richText(prob.text);
+      problemPrompt.classList.add('prompt-long');
+      figure.innerHTML = sceneFigureHTML(prob.scene);
+      figure.classList.add('hidden');
+      showFigureBtn.classList.remove('hidden');
+      answerList.innerHTML = numRowHTML(prob.answer);
     } else {
-      problemPrompt.innerHTML = `次の直角三角形で，${T('\\sin\\theta')}，${T('\\cos\\theta')}，${T('\\tan\\theta')} の値を求めなさい．`;
+      // 直前と同じ三角形が続かないように
+      do { prob = C.generateProblem(currentCategory, Math.random, { fixed: fixedOrient }); }
+      while (currentProblem && prob.opp2 === currentProblem.opp2 && prob.adj2 === currentProblem.adj2);
+      currentProblem = prob;
+      problemPrompt.classList.remove('prompt-long');
+      if (prob.hidden) {
+        problemPrompt.innerHTML = `「?」の辺 ${C.SIDE_NAME[prob.hidden]} の長さを求めてから，${T('\\sin\\theta')}，${T('\\cos\\theta')}，${T('\\tan\\theta')} の値を求めなさい．`;
+      } else {
+        problemPrompt.innerHTML = `次の直角三角形で，${T('\\sin\\theta')}，${T('\\cos\\theta')}，${T('\\tan\\theta')} の値を求めなさい．`;
+      }
+      figure.innerHTML = figureHTML(prob);
+      figure.classList.remove('hidden');
+      showFigureBtn.classList.add('hidden');
+      let html = '';
+      if (prob.hidden) html += sideRowHTML(prob.hidden);
+      html += RATIO_ROWS.map(ratioRowHTML).join('');
+      answerList.innerHTML = html;
     }
-    figure.innerHTML = figureHTML(prob);
-    let html = '';
-    if (prob.hidden) html += sideRowHTML(prob.hidden);
-    html += RATIO_ROWS.map(ratioRowHTML).join('');
-    answerList.innerHTML = html;
 
     explainBox.classList.add('hidden');
     explainBox.innerHTML = '';
@@ -637,12 +750,20 @@ document.addEventListener('DOMContentLoaded', () => {
     judgeBtn.classList.remove('hidden');
   }
 
+  showFigureBtn.addEventListener('click', () => {
+    figure.classList.remove('hidden');
+    showFigureBtn.classList.add('hidden');
+  });
+
   // --- Judge ---
   function judge() {
     if (isGameOver || isLocked || !currentProblem) return;
-    const tg = C.targets(currentProblem);
     const rows = Array.from(answerList.querySelectorAll('.ans-row'));
+    const tg = currentProblem.kind === 'apply' ? null : C.targets(currentProblem);
     const results = rows.map(row => {
+      if (row.dataset.kind === 'num') {
+        return AP.judgeApply(currentProblem, row.querySelector('.val-input').value);
+      }
       if (row.dataset.kind === 'side') {
         return C.judgeSide({ k: readInt(row, 'k'), m: readInt(row, 'm'), root: row.dataset.root === '1' }, currentProblem[row.dataset.key + '2']);
       }
@@ -661,13 +782,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    let firstHint = '';
+    let firstHint = '', wrongHint = '';
     results.forEach((r, i) => {
       const row = rows[i];
       clearMark(row);
       if (r.status === 'correct') { row.classList.add('is-correct'); row.querySelector('.ans-mark').textContent = '○'; }
       else if (r.status === 'form') { row.classList.add('is-form'); row.querySelector('.ans-mark').textContent = '△'; if (!firstHint) firstHint = r.hint; }
-      else { row.classList.add('is-wrong'); row.querySelector('.ans-mark').textContent = '✕'; }
+      else { row.classList.add('is-wrong'); row.querySelector('.ans-mark').textContent = '✕'; if (!wrongHint && r.hint) wrongHint = r.hint; }
     });
 
     if (results.every(r => r.status === 'correct')) {
@@ -678,7 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const key = rows.map(r => JSON.stringify(r.dataset) + Array.from(r.querySelectorAll('.val-input')).map(x => x.value).join(',')).join('|');
     if (key === lastWrongKey) { showFeedback('✕ や △ の欄を直してから判定しましょう．', 'info'); return; }
     lastWrongKey = key;
-    handleFailure(firstHint);
+    handleFailure(firstHint, wrongHint);
   }
 
   judgeBtn.addEventListener('click', judge);
@@ -708,9 +829,9 @@ document.addEventListener('DOMContentLoaded', () => {
     nextTimer = setTimeout(() => { nextTimer = null; if (!isGameOver) generateProblem(); }, note ? 3200 : 1300);
   }
 
-  function handleFailure(hint) {
+  function handleFailure(hint, wrongHint) {
     if (isGameOver) return;
-    let msg = hint ? `惜しい！ ${hint}` : '✕ の欄を見直しましょう．';
+    let msg = hint ? `惜しい！ ${hint}` : wrongHint ? `✕ ${wrongHint}` : '✕ の欄を見直しましょう．';
     if (currentGameMode === 'practice') {
       practiceStreak = 0;
       showExplainBtn.classList.remove('hidden');
@@ -733,6 +854,21 @@ document.addEventListener('DOMContentLoaded', () => {
   showExplainBtn.addEventListener('click', () => {
     const prob = currentProblem;
     let html = '<div class="explain-title">💡 解説</div>';
+    if (prob.kind === 'apply') {
+      figure.classList.remove('hidden');
+      showFigureBtn.classList.add('hidden');
+      html += '<p class="note">図において</p>';
+      prob.lines.forEach(l => { html += `<div class="math-line">${D(l)}</div>`; });
+      if (prob.conclusion) html += `<p class="note">${prob.conclusion}</p>`;
+      html += `<p class="note answer-note">答え：${AP.answerText(prob)}</p>`;
+      if (prob.note) html += `<p class="note">${prob.note}</p>`;
+      if (prob.answer.kind === 'length') html += '<p class="note">表の値は近似値なので，最後の桁が ±1 ずれても正解です．</p>';
+      explainBox.innerHTML = html;
+      explainBox.classList.remove('hidden');
+      showExplainBtn.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+      return;
+    }
     const py = C.pythagorasTex(prob);
     if (py) html += `<div class="math-line">${D(py)}</div>`;
     C.ratioLines(prob).forEach(l => { html += `<div class="math-line">${D(l.tex)}</div>`; });
