@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <!-- canvas-confetti for effects -->
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=14">
+  <link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
 
@@ -74,6 +74,13 @@
             <div class="btn-text">
               <h3>2辺から求める・答え方</h3>
               <p>三平方の定理と，約分・√・有理化のルール</p>
+            </div>
+          </button>
+          <button class="menu-btn tutorial-btn" data-tutorial="relation">
+            <span class="icon">🔗</span>
+            <div class="btn-text">
+              <h3>三角比の相互関係</h3>
+              <p>3つの公式と，1つの値から残りの2つを求める手順</p>
             </div>
           </button>
           <button class="menu-btn tutorial-btn" data-tutorial="apply">
@@ -181,6 +188,21 @@
 
         <section class="cat-section">
           <div class="cat-head">
+            <h3>三角比の相互関係</h3>
+          </div>
+          <div class="menu-buttons">
+            <button class="menu-btn category-btn" data-category="relation">
+              <span class="icon">🔗</span>
+              <div class="btn-text">
+                <h3>⑦ 1つから残りの2つを求める</h3>
+                <p>sin・cos・tan のうち1つの値から，残りの2つを求める（θ は鋭角）</p>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <section class="cat-section">
+          <div class="cat-head">
             <h3>三角比の活用</h3>
             <p class="cat-note">教科書の三角比の表を使って計算します</p>
           </div>
@@ -242,8 +264,9 @@
 
   <div class="feedback" id="feedback-toast"></div>
 
-  <script defer src="core.js?v=14"></script>
-  <script defer src="apply.js?v=14"></script>
-  <script defer src="script.js?v=14"></script>
+  <script defer src="core.js?v=16"></script>
+  <script defer src="relation.js?v=16"></script>
+  <script defer src="apply.js?v=16"></script>
+  <script defer src="script.js?v=16"></script>
 </body>
 </html>

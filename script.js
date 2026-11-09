@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const C = window.TrianCore;
   const AP = window.TrianApply;
+  const RL = window.TrianRelation;
   const isApply = cat => cat.indexOf('apply') === 0;
 
   // --- State ---
@@ -515,6 +516,57 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>`
       ]
     },
+    relation: {
+      title: '三角比の相互関係',
+      slides: [
+        () => `
+          <div class="tutorial-slide">
+            <p><b>3つの公式</b></p>
+            <div class="figure figure-small">${figureHTML({ opp2: 9, adj2: 16, hyp2: 25, orient: STD }, { sideTex: { hyp: 'c', opp: 'a', adj: 'b' } })}</div>
+            <p class="note">${T('\\sin\\theta = \\frac{a}{c}')}，${T('\\cos\\theta = \\frac{b}{c}')}，${T('\\tan\\theta = \\frac{a}{b}')}，三平方の定理 ${T('a^2 + b^2 = c^2')} から：</p>
+            <div class="math-line">${D('\\tan\\theta = \\frac{\\sin\\theta}{\\cos\\theta}')}</div>
+            <div class="math-line">${D('\\sin^2\\theta + \\cos^2\\theta = 1')}</div>
+            <div class="math-line">${D('1 + \\tan^2\\theta = \\frac{1}{\\cos^2\\theta}')}</div>
+            <ul class="term-list">
+              <li>1つ目：${T('\\frac{a}{c} \\div \\frac{b}{c} = \\frac{a}{b}')}</li>
+              <li>2つ目：${T('a^2 + b^2 = c^2')} の両辺を ${T('c^2')} で割る</li>
+              <li>3つ目：${T('a^2 + b^2 = c^2')} の両辺を ${T('b^2')} で割る</li>
+            </ul>
+            <p class="note">${T('\\sin^2\\theta')}（sine squared theta）：${T('(\\sin\\theta)^2')} のこと．読み方は「サイン2乗シータ」．${T('\\sin\\theta^2')} とは書きません．</p>
+          </div>`,
+        () => {
+          const p = RL.build('sin', 4, 9, false);
+          return `
+          <div class="tutorial-slide">
+            <p><b>sin（または cos）がわかるとき</b>　例：${T('\\sin\\theta = \\frac{2}{3}')}</p>
+            ${RL.relationLines(p).map(l => `<p class="note">${richText(l.text)}</p><div class="math-line">${D(l.tex)}</div>`).join('')}
+            <p class="note">θ が鋭角のとき，sin・cos・tan は辺の長さの比なので，どれも正の数です．だから ${T('\\cos^2\\theta = \\frac{5}{9}')} から ${T('\\cos\\theta')} は正の方だけをとります．</p>
+          </div>`;
+        },
+        () => {
+          const p = RL.build('tan', 4, 1, false);
+          return `
+          <div class="tutorial-slide">
+            <p><b>tan がわかるとき</b>　例：${T('\\tan\\theta = 2')}</p>
+            ${RL.relationLines(p).map(l => `<p class="note">${richText(l.text)}</p><div class="math-line">${D(l.tex)}</div>`).join('')}
+            <p class="note">先に ${T('1 + \\tan^2\\theta = \\frac{1}{\\cos^2\\theta}')} で cos を求め，sin は ${T('\\tan\\theta \\times \\cos\\theta')} で求めます．</p>
+          </div>`;
+        },
+        () => {
+          const p = RL.build('sin', 4, 9, false);
+          const tl = RL.triangleLines(p);
+          return `
+          <div class="tutorial-slide">
+            <p><b>別解：直角三角形で考える</b></p>
+            <p class="note">${richText(tl.intro)}</p>
+            <div class="figure figure-small">${figureHTML(p)}</div>
+            <p class="note">三平方の定理から</p>
+            <div class="math-line">${D(tl.py)}</div>
+            <p class="note">あとは定義から ${T('\\cos\\theta = \\frac{\\sqrt{5}}{3}')}，${T('\\tan\\theta = \\frac{2}{\\sqrt{5}}')}．問題で迷ったら「📐 直角三角形で考える」で図を出せます．</p>
+          </div>`;
+        }
+      ]
+    },
     apply: {
       title: '三角比の活用',
       slides: [
@@ -607,6 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     three: { name: '① 3辺がわかる三角形', label: '🔰 3辺', desc: '3辺の長さがわかっている直角三角形で，sin θ，cos θ，tan θ の値を求めます．三角形の向きは毎回変わります．' },
     two: { name: '② 2辺から求める', label: '📏 2辺から', desc: '「?」の辺の長さを三平方の定理で求めて入力し，それから sin θ，cos θ，tan θ の値を求めます．' },
     mix: { name: '③ ミックス', label: '🔀 ミックス', desc: '①と②がランダムに出題されます．' },
+    relation: { name: '⑦ 相互関係', label: '🔗 相互関係' },
     applyLen: { name: '④ 長さを求める', label: '📐 活用：長さ' },
     applyAng: { name: '⑤ 角度を求める', label: '🧭 活用：角度' },
     applyMix: { name: '⑥ 活用ミックス', label: '🎯 活用ミックス' }
@@ -722,8 +775,22 @@ document.addEventListener('DOMContentLoaded', () => {
       problemPrompt.classList.add('prompt-long');
       figure.innerHTML = sceneFigureHTML(prob.scene);
       figure.classList.add('hidden');
+      showFigureBtn.textContent = '📐 図を見る';
       showFigureBtn.classList.remove('hidden');
       answerList.innerHTML = numRowHTML(prob.answer);
+    } else if (currentCategory === 'relation') {
+      // 三角比の相互関係：1つの値から残りの2つ．直角三角形はヒントとしてボタンで出す
+      do { prob = RL.generateRelation(); }
+      while (currentProblem && currentProblem.kind === 'relation' && currentProblem.given === prob.given && currentProblem.givenTex === prob.givenTex);
+      currentProblem = prob;
+      problemPrompt.classList.remove('prompt-long');
+      const [k1, k2] = prob.asks;
+      problemPrompt.innerHTML = `θ は鋭角とする．${D('\\' + prob.given + '\\theta = ' + prob.givenTex)} のとき，${T('\\' + k1 + '\\theta')} と ${T('\\' + k2 + '\\theta')} の値を求めなさい．`;
+      figure.innerHTML = figureHTML(prob);
+      figure.classList.add('hidden');
+      showFigureBtn.textContent = '📐 直角三角形で考える';
+      showFigureBtn.classList.remove('hidden');
+      answerList.innerHTML = prob.asks.map(k => ratioRowHTML(RATIO_ROWS.find(r => r.key === k))).join('');
     } else {
       // 直前と同じ三角形が続かないように
       do { prob = C.generateProblem(currentCategory, Math.random, { fixed: fixedOrient }); }
@@ -855,6 +922,20 @@ document.addEventListener('DOMContentLoaded', () => {
   showExplainBtn.addEventListener('click', () => {
     const prob = currentProblem;
     let html = '<div class="explain-title">💡 解説</div>';
+    if (prob.kind === 'relation') {
+      RL.relationLines(prob).forEach(l => { html += `<p class="note">${richText(l.text)}</p><div class="math-line">${D(l.tex)}</div>`; });
+      const tl = RL.triangleLines(prob);
+      html += `<p class="note"><b>別解</b>　${richText(tl.intro)}三平方の定理から</p><div class="math-line">${D(tl.py)}</div>`;
+      html += '<p class="note">この三角形で，定義から残りの2つを求めることもできます．有理化してもしなくても正解です．</p>';
+      figure.innerHTML = figureHTML(prob, { sideTex: { hyp: C.sqrtTex(prob.hyp2), opp: C.sqrtTex(prob.opp2), adj: C.sqrtTex(prob.adj2) } });
+      figure.classList.remove('hidden');
+      showFigureBtn.classList.add('hidden');
+      explainBox.innerHTML = html;
+      explainBox.classList.remove('hidden');
+      showExplainBtn.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+      return;
+    }
     if (prob.kind === 'apply') {
       figure.classList.remove('hidden');
       showFigureBtn.classList.add('hidden');
