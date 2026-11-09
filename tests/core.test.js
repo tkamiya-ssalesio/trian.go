@@ -38,6 +38,8 @@ ok(status(R(1, 3, 1, 1, { frac: true }), t3.tan) === 'form', '√3/1 は書き�
 ok(status(R(1, 6, 1, 2), t3.tan) === 'form', '√6/√2 は書き方ミス');
 const t35 = C.targets({ opp2: 3, adj2: 2, hyp2: 5 });
 ok(status(R(1, 3, 1, 5), t35.sin) === 'correct', '√3/√5 は有理化しなくても正解');
+ok(/√15\/5/.test(C.judgeRatio(R(1, 3, 1, 5), t35.sin).note || ''), '√3/√5 には有理化のすすめを添える');
+ok(!C.judgeRatio(R(2, 1, 1, 5), C.targets({ opp2: 4, adj2: 1, hyp2: 5 }).sin).note, '2/√5 には添えない');
 ok(status(R(1, 15, 5, 1), t35.sin) === 'correct', '√15/5 も正解');
 ok(status(R(1, 6, 1, 10), t35.sin) === 'form', '√6/√10 は約分');
 ok(status(R(3, 1, 1, 15), t35.sin) === 'form', '3/√15 は約分');

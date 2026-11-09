@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <tr><td>√ の中を簡単に</td><td>${D('\\sqrt{8}')}</td><td>${D('2\\sqrt{2}')}</td></tr>
               <tr><td>分母が 1 なら整数に</td><td>${D('\\frac{\\sqrt{3}}{1}')}</td><td>${D('\\sqrt{3}')}</td></tr>
               <tr><td>√ どうしも約分する</td><td>${D('\\frac{\\sqrt{6}}{\\sqrt{10}}')}</td><td>${D('\\frac{\\sqrt{3}}{\\sqrt{5}}')}</td></tr>
-              <tr><td>有理化は自由</td><td>―</td><td>${D('\\frac{2}{\\sqrt{5}}')} も ${D('\\frac{2\\sqrt{5}}{5}')} も○<br>${D('\\frac{\\sqrt{3}}{\\sqrt{5}}')} も ${D('\\frac{\\sqrt{15}}{5}')} も○</td></tr>
+              <tr><td>有理化は自由</td><td>―</td><td>${D('\\frac{2}{\\sqrt{5}}')} も ${D('\\frac{2\\sqrt{5}}{5}')} も○<br>${D('\\frac{\\sqrt{3}}{\\sqrt{5}}')} も○．ただし分母・分子がともに √ なら，有理化した ${D('\\frac{\\sqrt{15}}{5}')} がおすすめ</td></tr>
             </table>
           </div>`,
         () => `
@@ -670,7 +670,11 @@ document.addEventListener('DOMContentLoaded', () => {
       else { row.classList.add('is-wrong'); row.querySelector('.ans-mark').textContent = '✕'; }
     });
 
-    if (results.every(r => r.status === 'correct')) { handleSuccess(); return; }
+    if (results.every(r => r.status === 'correct')) {
+      const note = (results.find(r => r.note) || {}).note;
+      handleSuccess(note);
+      return;
+    }
     const key = rows.map(r => JSON.stringify(r.dataset) + Array.from(r.querySelectorAll('.val-input')).map(x => x.value).join(',')).join('|');
     if (key === lastWrongKey) { showFeedback('✕ や △ の欄を直してから判定しましょう．', 'info'); return; }
     lastWrongKey = key;
@@ -679,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   judgeBtn.addEventListener('click', judge);
 
-  function handleSuccess() {
+  function handleSuccess(note) {
     if (isGameOver) return;
     isLocked = true;
     judgeBtn.disabled = true;
@@ -698,9 +702,10 @@ document.addEventListener('DOMContentLoaded', () => {
       msg = `正解！ ${saCombo}コンボ（+${points}点，残り時間+10秒）`;
     }
     updateStatsUI();
-    showFeedback(msg, 'success');
+    // 有理化のすすめなど，正解でも伝えたいことがあれば添えて，読めるよう少し長く待つ
+    showFeedback(note ? msg + ' ' + note : msg, 'success', note ? 4000 : 3000);
     burst();
-    nextTimer = setTimeout(() => { nextTimer = null; if (!isGameOver) generateProblem(); }, 1300);
+    nextTimer = setTimeout(() => { nextTimer = null; if (!isGameOver) generateProblem(); }, note ? 3200 : 1300);
   }
 
   function handleFailure(hint) {
@@ -767,10 +772,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let toastTimer = null;
-  function showFeedback(text, type) {
+  function showFeedback(text, type, ms) {
     feedbackToast.textContent = text;
     feedbackToast.className = `feedback show ${type}`;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => feedbackToast.classList.remove('show'), 3000);
+    toastTimer = setTimeout(() => feedbackToast.classList.remove('show'), ms || 3000);
   }
 });

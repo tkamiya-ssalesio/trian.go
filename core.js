@@ -180,6 +180,10 @@
     if (denRoot && gcd(a, d) > 1) {
       return { status: 'form', hint: 'まだ約分できます（例：3/√3 = √3）．' };
     }
+    // 分子・分母がともに √ のときは正解．ただし見やすさのため有理化をすすめる
+    if (numRoot && denRoot) {
+      return { status: 'correct', hint: '', note: '分母・分子がともに √ のときは，有理化して ' + rationalizedPlain(target.n, target.d) + ' と書くと見やすくなります．' };
+    }
     return { status: 'correct', hint: '' };
   }
 
@@ -202,6 +206,16 @@
 
   // ---------- 解説用の TeX ----------
   // 値の2乗 n/d を有理化した最も簡単な形に
+  // 有理化した形の文字表記（例：√15/5）．画面の短い案内用
+  function rationalizedPlain(n, d) {
+    const g = gcd(n, d); n /= g; d /= g;
+    const { k, m } = simplifySqrt(n * d);
+    const g2 = gcd(k, d);
+    const kk = k / g2, dd = d / g2;
+    const num = m === 1 ? String(kk) : (kk === 1 ? '' : kk) + '√' + m;
+    return dd === 1 ? num : num + '/' + dd;
+  }
+
   function rationalizedTex(n, d) {
     const g = gcd(n, d); n /= g; d /= g;
     // √(n/d) = √(n·d) / d
