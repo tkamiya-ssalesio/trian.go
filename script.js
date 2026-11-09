@@ -521,18 +521,18 @@ document.addEventListener('DOMContentLoaded', () => {
       slides: [
         () => `
           <div class="tutorial-slide">
-            <p><b>3つの公式</b></p>
+            <p><b>三角比の相互関係（relations among trigonometric ratios）</b>：sin・cos・tan の間に成り立つ3つの式．</p>
             <div class="figure figure-small">${figureHTML({ opp2: 9, adj2: 16, hyp2: 25, orient: STD }, { sideTex: { hyp: 'c', opp: 'a', adj: 'b' } })}</div>
-            <p class="note">${T('\\sin\\theta = \\frac{a}{c}')}，${T('\\cos\\theta = \\frac{b}{c}')}，${T('\\tan\\theta = \\frac{a}{b}')}，三平方の定理 ${T('a^2 + b^2 = c^2')} から：</p>
+            <p class="note">${T('\\sin\\theta = \\frac{a}{c}')}，${T('\\cos\\theta = \\frac{b}{c}')}，${T('\\tan\\theta = \\frac{a}{b}')}，三平方の定理 ${T('a^2 + b^2 = c^2')}．定義と三平方の定理から：</p>
             <div class="math-line">${D('\\tan\\theta = \\frac{\\sin\\theta}{\\cos\\theta}')}</div>
             <div class="math-line">${D('\\sin^2\\theta + \\cos^2\\theta = 1')}</div>
             <div class="math-line">${D('1 + \\tan^2\\theta = \\frac{1}{\\cos^2\\theta}')}</div>
             <ul class="term-list">
               <li>1つ目：${T('\\frac{a}{c} \\div \\frac{b}{c} = \\frac{a}{b}')}</li>
               <li>2つ目：${T('a^2 + b^2 = c^2')} の両辺を ${T('c^2')} で割る</li>
-              <li>3つ目：${T('a^2 + b^2 = c^2')} の両辺を ${T('b^2')} で割る</li>
+              <li>3つ目：${T('a^2 + b^2 = c^2')} の両辺を ${T('b^2')} で割ると ${T('\\left(\\frac{a}{b}\\right)^2 + 1 = \\left(\\frac{c}{b}\\right)^2')}．${T('\\frac{c}{b} = 1 \\div \\frac{b}{c} = \\frac{1}{\\cos\\theta}')} だから</li>
             </ul>
-            <p class="note">${T('\\sin^2\\theta')}（sine squared theta）：${T('(\\sin\\theta)^2')} のこと．読み方は「サイン2乗シータ」．${T('\\sin\\theta^2')} とは書きません．</p>
+            <p class="note">${T('\\sin^2\\theta')}（sine squared theta）：${T('(\\sin\\theta)^2')} のこと．読み方は「サイン2乗シータ」．${T('\\sin\\theta^2')} とは書きません（${T('\\theta^2')} の sin と読まれてしまうため）．</p>
           </div>`,
         () => {
           const p = RL.build('sin', 4, 9, false);
@@ -540,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="tutorial-slide">
             <p><b>sin（または cos）がわかるとき</b>　例：${T('\\sin\\theta = \\frac{2}{3}')}</p>
             ${RL.relationLines(p).map(l => `<p class="note">${richText(l.text)}</p><div class="math-line">${D(l.tex)}</div>`).join('')}
-            <p class="note">θ が鋭角のとき，sin・cos・tan は辺の長さの比なので，どれも正の数です．だから ${T('\\cos^2\\theta = \\frac{5}{9}')} から ${T('\\cos\\theta')} は正の方だけをとります．</p>
+            <p class="note">${T('\\cos^2\\theta = \\frac{5}{9}')} になる数は ${T('\\pm\\sqrt{\\frac{5}{9}}')} の2つありますが，θ が鋭角のとき sin・cos・tan は辺の長さの比なので，どれも正の数です．だから正の方だけをとります．</p>
           </div>`;
         },
         () => {

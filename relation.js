@@ -24,13 +24,18 @@
     }
     const A = C.simplifySqrt(N2), B = C.simplifySqrt(D2);
     const part = s => s.m === 1 ? String(s.k) : (s.k === 1 ? '' : s.k) + '\\sqrt{' + s.m + '}';
-    const tex = D2 === 1 ? part(A) : '\\frac{' + part(A) + '}{' + part(B) + '}';
-    return { tex, N2, D2 };
+    const numTex = part(A), denTex = part(B);
+    const tex = D2 === 1 ? numTex : '\\frac{' + numTex + '}{' + denTex + '}';
+    // 逆数（割り算を「逆数をかける」に直す行で使う）
+    const recipTex = N2 === 1 ? denTex : '\\frac{' + denTex + '}{' + numTex + '}';
+    return { tex, N2, D2, recipTex };
   }
   // 分子・分母がともに √（√2/√5 など）か
   const bothRoot = (n2, d2) => { const f = form(n2, d2, false); return C.simplifySqrt(f.N2).m !== 1 && C.simplifySqrt(f.D2).m !== 1; };
-  // 解説で使う答えの形：有理化しない形（2/√5 など．プリントと同じ）．ただし分子・分母がともに √ なら有理化した形
-  const valTex = (n2, d2) => (bothRoot(n2, d2) ? null : C.naturalTex(n2, d2)) || C.rationalizedTex(n2, d2);
+  // 解説で使う答えの形：有理化しない形（2/√5 など．プリントと同じ）．
+  // ただし分子・分母がともに √ のとき，与えた値を有理化した問題では，有理化した形にそろえる
+  const shown = (n2, d2, rat) => form(n2, d2, !!rat || bothRoot(n2, d2));
+  const valTex = (n2, d2, rat) => shown(n2, d2, rat).tex;
   const fracTex = (n, d) => { const g = gcd(n, d); n /= g; d /= g; return d === 1 ? String(n) : `\\frac{${n}}{${d}}`; };
   const sqrtFracTex = (n, d) => { const g = gcd(n, d); n /= g; d /= g; return d === 1 ? `\\sqrt{${n}}` : `\\sqrt{\\frac{${n}}{${d}}}`; };
   const sq = t => /\\frac|\\sqrt/.test(t) ? `\\left(${t}\\right)^2` : `${t}^2`;
@@ -46,8 +51,10 @@
     const pair = { sin: [sq0.opp2, sq0.hyp2], cos: [sq0.adj2, sq0.hyp2], tan: [sq0.opp2, sq0.adj2] }[given];
     // 分母に √ が残る値は，ときどき有理化した形で与える（どちらの形でも読めるように）
     // 分子・分母がともに √ の値（√2/√5）は，見やすさのため必ず有理化して与える
-    const hasRootDen = C.simplifySqrt(form(pair[0], pair[1], false).D2).m !== 1;
-    const rat = bothRoot(pair[0], pair[1]) || (hasRootDen && rng() < 0.3);
+    // 分母が 4√2 のように「係数 × √」の値も有理化して与える（教科書の与え方に合わせる）
+    const den = C.simplifySqrt(form(pair[0], pair[1], false).D2);
+    const hasRootDen = den.m !== 1;
+    const rat = bothRoot(pair[0], pair[1]) || (hasRootDen && den.k > 1) || (hasRootDen && rng() < 0.3);
     return build(given, pair[0], pair[1], rat);
   }
 
@@ -61,7 +68,7 @@
     else { opp2 = f.N2; adj2 = f.D2; hyp2 = f.N2 + f.D2; }
     const hidden = given === 'sin' ? 'adj' : given === 'cos' ? 'opp' : 'hyp';
     return {
-      kind: 'relation', given, givenTex: f.tex, asks: OTHERS[given],
+      kind: 'relation', given, givenTex: f.tex, givenRecip: f.recipTex, rationalized: !!rationalize, asks: OTHERS[given],
       opp2, adj2, hyp2, hidden,
       orient: { mode: 'axis', phi: 0, flip: false }
     };
@@ -70,7 +77,9 @@
   // 解説（プリントと同じ流れ）：[{ text, tex }]
   function relationLines(p) {
     const t = C.targets(p);
-    const sinT = valTex(t.sin.n, t.sin.d), cosT = valTex(t.cos.n, t.cos.d), tanT = valTex(t.tan.n, t.tan.d);
+    const r = p.rationalized;
+    const sinF = shown(t.sin.n, t.sin.d, r), cosF = shown(t.cos.n, t.cos.d, r);
+    const sinT = sinF.tex, cosT = cosF.tex, tanT = valTex(t.tan.n, t.tan.d, r);
     const g = p.givenTex;
     const L = [];
     if (p.given === 'sin' || p.given === 'cos') {
@@ -79,7 +88,10 @@
       const bT = b === 'sin' ? sinT : cosT;
       L.push({ text: `${tx('\\sin^2\\theta + \\cos^2\\theta = 1')} から`, tex: `\\${b}^2\\theta = 1 - \\${a}^2\\theta = 1 - ${sq(g)} = ${fracTex(b2.n, b2.d)}` });
       L.push({ text: `${tx('\\' + b + '\\theta > 0')} であるから`, tex: `\\${b}\\theta = ${sqrtFracTex(b2.n, b2.d)} = ${bT}` });
-      const div = a === 'sin' ? `${g} \\div ${cosT}` : `${sinT} \\div ${g}`;
+      // 割り算は「逆数をかける」行をはさむ（プリントと同じ）
+      const div = a === 'sin'
+        ? `${g} \\div ${cosT} = ${g} \\times ${cosF.recipTex}`
+        : `${sinT} \\div ${g} = ${sinT} \\times ${p.givenRecip}`;
       L.push({ text: 'また', tex: `\\tan\\theta = \\frac{\\sin\\theta}{\\cos\\theta} = ${div} = ${tanT}` });
     } else {
       const inv = { n: t.cos.d, d: t.cos.n }; // 1/cos²θ
@@ -101,7 +113,7 @@
     const word = { hyp: '斜辺', opp: 'θ の向かいの辺', adj: 'θ のとなりの辺' };
     const known = ['hyp', 'opp', 'adj'].filter(k => k !== p.hidden);
     const h = p.hidden;
-    const intro = `θ が鋭角で ${tx('\\' + p.given + '\\theta = ' + p.givenTex)} から，${word[known[0]]} ${name[known[0]]} $= ${S[known[0]]}$，${word[known[1]]} ${name[known[1]]} $= ${S[known[1]]}$ の直角三角形 ABC が描ける．`;
+    const intro = `θ が鋭角で ${tx('\\' + p.given + '\\theta = ' + p.givenTex)} から，∠C = 90°，θ = ∠A で，${word[known[0]]} ${name[known[0]]} $= ${S[known[0]]}$，${word[known[1]]} ${name[known[1]]} $= ${S[known[1]]}$ の直角三角形 ABC が描ける．`;
     let py;
     // √n が簡単にならないとき（√5 = √5）は最後の一歩を書かない
     const tail = k => (S[k] === `\\sqrt{${p[k + '2']}}` ? `\\sqrt{${p[k + '2']}}` : `\\sqrt{${p[k + '2']}} = ${S[k]}`);

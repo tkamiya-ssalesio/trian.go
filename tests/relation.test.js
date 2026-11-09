@@ -45,6 +45,8 @@ for (let i = 0; i < N; i++) {
   const f = R.form(t.n, t.d, /\\sqrt\{\d+\}\}$/.test(p.givenTex) ? false : (p.givenTex !== R.form(t.n, t.d, false).tex));
   ok(f.tex === p.givenTex, '与えた値と三角形の比が一致 ' + p.givenTex);
   ok(!/\\frac\{\d*\\sqrt\{\d+\}\}\{\d*\\sqrt/.test(p.givenTex), '分子・分母がともに √ の形で与えない ' + p.givenTex);
+  ok(!/\}\{\d+\\sqrt/.test(p.givenTex), '分母が「係数 × √」の形で与えない ' + p.givenTex);
+  ok(R.relationLines(p).every(l => !/\\div/.test(l.tex) || /\\times/.test(l.tex)), '割り算には逆数をかける行がある');
   ok(p.asks.length === 2 && p.asks.indexOf(p.given) < 0, '残りの2つを聞く');
   // 求める2つは，有理化した形が正解になり，きれいな形
   for (const k of p.asks) {
