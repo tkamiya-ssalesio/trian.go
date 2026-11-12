@@ -1185,3 +1185,36 @@ text.ex-neg { fill: var(--apple-red); }
 .ex-chip:hover { border-color: var(--theme-primary); color: var(--theme-primary); }
 .ex-checks { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; font-size: 14px; }
 .ex-checks input { accent-color: var(--theme-primary); margin-right: 4px; }
+
+/* 三角比の拡張：横長の画面では図と説明を左右に並べ，スクロールなしで1枚に収める */
+.ex-slide .ex-lead,
+.ex-slide .ex-stage,
+.ex-slide .ex-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+@media (min-width: 900px) and (orientation: landscape) {
+  .container:has(.ex-slide) { max-width: min(1280px, 96vw); }
+  .ex-slide {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-areas: "stage lead" "stage side";
+    grid-template-rows: auto 1fr;
+    gap: 14px 28px;
+    align-items: start;
+  }
+  .ex-slide .ex-lead { grid-area: lead; }
+  .ex-slide .ex-stage { grid-area: stage; }
+  .ex-slide .ex-side { grid-area: side; }
+  /* 図の高さを画面の高さに合わせる（見出し・操作ボタン・前後ボタンの分を引く） */
+  .ex-slide .ex-figure {
+    max-width: min(100%, calc((100dvh - 380px) * var(--arw, 1.4)));
+  }
+  .ex-slide p, .ex-slide li { font-size: 15px; line-height: 1.6; }
+  .ex-slide .term-list li { font-size: 14px; }
+  /* 縦の余白を詰める（提示用の1画面に収める） */
+  .container:has(.ex-slide) { padding-top: 8px; padding-bottom: 8px; }
+  #app-card:has(.ex-slide) { padding-top: 14px; padding-bottom: 14px; }
+  .tutorial-card:has(.ex-slide) { padding: 14px 20px; }
+  .ex-slide .ex-info { min-height: 0; }
+  /* コラムは図の下に式があるので，そのぶん図を小さく */
+  .ex-stage:has(#ex7-info) .ex-figure { max-width: min(100%, calc((100dvh - 460px) * var(--arw, 1.2))); }
+}
+.ex-axlab { font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-weight: 700; paint-order: stroke; stroke: #ffffff; stroke-width: 4px; stroke-linejoin: round; }
