@@ -9,7 +9,7 @@
 
 ## ✨ 主な機能と学習カテゴリ
 
-### 📚 3つの学習カテゴリ
+### 📚 学習カテゴリ
 ゲームモードを選んだあと，問題の種類を選ぶとすぐ始まります．三角形の向きは「毎回変わる」と「いつも同じ（θ が左下，直角が右下）」から選べます（じっくり定義を覚えたいとき用．端末が覚えておきます）．
 
 1. **🔰 ① 3辺がわかる三角形**
@@ -21,6 +21,12 @@
 
 7. **🔗 ⑦ 三角比の相互関係**
    θ は鋭角として，sin・cos・tan のうち1つの値から残りの2つを求めます．与える三角比は sin・cos・tan が同じ割合です．「📐 直角三角形で考える」で別解の図を出せます．解説は公式（sin²θ + cos²θ = 1 など）を使う流れと，直角三角形の別解の両方です．
+8. **🔺 ⑧ 30°・45°・60° の三角比**
+   sin 60° などの値を答える問題と，sin θ = 1/2（θ は鋭角）から θ を答える問題が半々で出ます．1/√2 と √2/2 のように有理化した形でも与えます．「📐 三角定規を見る」で辺の比の図を出せます．
+9. **🔄 ⑨ 45° 以下の角で表す**
+   sin 64° = cos 26°，tan 83° = 1/tan 7° のように書きかえます．sin・cos・tan・1/tan のボタンを選び，角度を入れます．そのまま書いたとき，sin を cos に変え忘れたとき，tan のままにしたときは案内を出します．
+10. **🧮 ⑩ 式の値**
+   sin²40° + sin²50°，tan 35° tan 55° − tan 15° tan 75°，(sin 70° + sin 20°)² − 2 tan 70° cos²70°，cos²20° + cos²35° + cos²45° + cos²55° + cos²70° の4つの型で，角度を変えて出します．答えは整数か分数（0 や 5/2 もある）．
 4. **📐 ④ 長さを求める（三角比の活用）**
    木の高さ（目の高さを足す）・影・見下ろした距離・坂・凧・はしご・エスカレーターなど．教科書の三角比の表を使って計算します．
 5. **🧭 ⑤ 角度を求める（三角比の活用）**
@@ -43,11 +49,12 @@
   * **有理化はしてもしなくても正解**です（2/√5 も 2√5/5 も，√3/√5 も √15/5 も○）．ただし √6/√10 のように √ どうしで約分できるものは「惜しい」です．√3/√5 のように分母・分子がともに √ の答えは正解にしたうえで，有理化した形をすすめる案内を出します．
 * 練習モードでは，間違えたあとに「解説を見る」で sin θ = BC/AB = … の式を確認できます．
 
-### 📖 やり方を学ぶ（3つの解説）
+### 📖 やり方を学ぶ
 * **三角比の定義**：斜辺・θ の向かいの辺・となりの辺，sin・cos・tan の定義，筆記体 s・c・t の覚え方，向きが変わったときの見方，例題．
 * **大きさによらない**：スライダーで三角形を k 倍しても三角比が変わらないことを確かめ，相似で理由を説明します．
 * **2辺から求める・答え方**：三平方の定理と，約分・√・有理化のルール，入力のしかた．
 * **三角比の相互関係**：3つの公式の導き方，sin（cos）がわかるとき・tan がわかるときの手順，直角三角形を使う別解．
+* **有名角・余角の三角比**：三角定規の辺の比と 30°・45°・60° の表，余角の公式（sin(90° − θ) = cos θ など）とその理由，45° 以下の角で表す・式の値の例と入力のしかた．
 * **三角比の活用**：仰角・俯角，どの三角比を使うか（正弦・余弦・正接），三角比の表の引き方と答え方．
 
 ### 🎮 4つのゲームモード
@@ -69,6 +76,7 @@
 node tests/core.test.js
 node tests/apply.test.js
 node tests/relation.test.js
+node tests/famous.test.js
 ```
 プリントの解答例（三角比・三角比の活用），書き方のルール，約3億通りの入力パターンの総当たり（正解になるのは値が等しく最も簡単な形だけか），三角形とラベルの配置を検査します．
 
@@ -79,7 +87,7 @@ node tests/relation.test.js
 A gamified web training app for the introduction of trigonometric ratios (sine, cosine, tangent) in Japanese high school Math I. The name comes from how students read "triangle" in katakana.
 
 ## ✨ Features
-* **7 categories:** (1) all three sides given, (2) two sides given — find the third with the Pythagorean theorem first, (3) mixed; and applications with a trig table: (4) find a length (heights, slopes, angles of elevation and depression), (5) find an angle from a gradient or two sides, (6) mixed; and (7) trigonometric identities — given one of sin, cos, tan of an acute angle, find the other two.
+* **10 categories:** (1) all three sides given, (2) two sides given — find the third with the Pythagorean theorem first, (3) mixed; and applications with a trig table: (4) find a length (heights, slopes, angles of elevation and depression), (5) find an angle from a gradient or two sides, (6) mixed; and (7) trigonometric identities — given one of sin, cos, tan of an acute angle, find the other two; (8) sin, cos, tan of 30°, 45°, 60° and the reverse (find the acute angle); (9) rewrite with an angle of 45° or less using complementary angles (sin 64° = cos 26°, tan 83° = 1/tan 7°); (10) evaluate expressions using complementary angles.
 * Application answers computed with the 4-digit table are accepted within ±1 in the last digit.
 * The angle θ and the right-angle mark are always shown, and the triangle is rotated or reflected at random every time.
 * Answers must be in simplest form (reduced fractions, simplified radicals). **Rationalizing the denominator is optional** — both 2/√5 and 2√5/5 are accepted.

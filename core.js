@@ -359,7 +359,8 @@
     const bis = unit([uAC[0] + uAB[0], uAC[1] + uAB[1]]);
     const theta = Math.atan2(opp, adj);
     const arcR = 22;
-    const thetaR = theta < 0.45 ? 52 : (theta < 0.7 ? 42 : 36);
+    // θ の代わりに「30°」のような幅のある文字を置くときは，弧から少し離す
+    const thetaR = (theta < 0.45 ? 52 : (theta < 0.7 ? 42 : 36)) + (opts && opts.thetaTex ? 26 : 0);
     const thetaLabel = add(P.A, bis, thetaR);
     const arcStart = add(P.A, uAC, arcR), arcEnd = add(P.A, uAB, arcR);
     const cross = uAC[0] * uAB[1] - uAC[1] * uAB[0];

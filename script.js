@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const C = window.TrianCore;
   const AP = window.TrianApply;
   const RL = window.TrianRelation;
+  const FM = window.TrianFamous;
   const isApply = cat => cat.indexOf('apply') === 0;
 
   // --- State ---
@@ -109,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cls = prob.hidden === k && !opts.sideTex ? ' lbl-unknown' : '';
       labels += `<div class="lbl lbl-side${cls}" style="${pos(L.sideLabels[k])}">${inner}</div>`;
     }
-    labels += `<div class="lbl lbl-theta" style="${pos(L.thetaLabel)}">${T('\\theta')}</div>`;
+    labels += `<div class="lbl lbl-theta" style="${pos(L.thetaLabel)}">${T(opts.thetaTex || '\\theta')}</div>`;
     return svg + labels;
   }
 
@@ -187,6 +188,38 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>`;
   }
 
+  // 45° 以下の角で表す：三角比を選び，角度を入れる欄（1/tan を選ぶと分数になる）
+  function compRowHTML(p) {
+    const pick = (f, label) => `<button type="button" class="toggle-btn" data-fnpick="${f}">${label}</button>`;
+    return `
+      <div class="ans-row ans-row-comp" data-kind="comp" data-fn="">
+        <div class="ans-label">${T(`\\${p.fn}\\,${p.deg}^\\circ =`)}</div>
+        <div class="ans-body">
+          <div class="ans-value comp-value">
+            <div class="comp-one hidden">1</div>
+            <div class="ans-line comp-line hidden"></div>
+            <div class="comp-main"><span class="comp-fn">?</span><input type="text" inputmode="numeric" autocomplete="off" maxlength="3" class="val-input val-deg" data-role="deg"><span class="num-affix">°</span></div>
+          </div>
+          <div class="ans-toggles comp-picks">${pick('sin', 'sin')}${pick('cos', 'cos')}${pick('tan', 'tan')}${pick('rtan', '1/tan')}</div>
+        </div>
+        <div class="ans-mark"></div>
+      </div>`;
+  }
+  function setCompFn(row, f) {
+    row.dataset.fn = f;
+    row.querySelectorAll('[data-fnpick]').forEach(b => b.classList.toggle('active', b.dataset.fnpick === f));
+    const rt = f === 'rtan';
+    row.querySelector('.comp-one').classList.toggle('hidden', !rt);
+    row.querySelector('.comp-line').classList.toggle('hidden', !rt);
+    row.querySelector('.comp-fn').textContent = rt ? 'tan' : f;
+    clearMark(row);
+  }
+
+  // 三角定規の図（30°・45°・60°）．角の大きさを θ の位置に書く
+  function famousFigureHTML(p) {
+    return figureHTML(p, { sideTex: { hyp: C.sqrtTex(p.hyp2), opp: C.sqrtTex(p.opp2), adj: C.sqrtTex(p.adj2) }, thetaTex: p.deg + '^\\circ' });
+  }
+
   function sideRowHTML(sideKey) {
     return `
       <div class="ans-row ans-row-side" data-kind="side" data-key="${sideKey}" data-root="0">
@@ -247,6 +280,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = e.target.closest('.toggle-btn');
     if (!btn || isLocked) return;
     const row = btn.closest('.ans-row');
+    if (btn.dataset.fnpick) {
+      setCompFn(row, btn.dataset.fnpick);
+      const el = row.querySelector('.val-deg');
+      if (el && el.value.trim() === '') el.focus();
+      return;
+    }
     const name = btn.dataset.toggle;
     const on = row.dataset[name] !== '1';
     setToggle(row, name, on);
@@ -567,6 +606,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       ]
     },
+    famous: {
+      title: '有名角・余角の三角比',
+      slides: [
+        () => {
+          const rows = FM.FN.map(f => `<tr><th>${T('\\' + f + '\\theta')}</th>${FM.DEG.map(d => `<td>${T(FM.VAL_TEX[d][f][0])}</td>`).join('')}</tr>`).join('');
+          return `
+          <div class="tutorial-slide">
+            <p><b>30°・45°・60° の三角比</b>：三角定規の辺の比から求めます．</p>
+            <div class="fig-pair">
+              <div class="figure figure-small">${famousFigureHTML(Object.assign({ deg: 30, orient: STD }, FM.TRI[30]))}</div>
+              <div class="figure figure-small">${famousFigureHTML(Object.assign({ deg: 45, orient: STD }, FM.TRI[45]))}</div>
+            </div>
+            <p class="note">辺の比は ${T('\\mathrm{BC} : \\mathrm{AB} : \\mathrm{AC} = 1 : 2 : \\sqrt{3}')} と ${T('\\mathrm{BC} : \\mathrm{AC} : \\mathrm{AB} = 1 : 1 : \\sqrt{2}')}．60° は左の三角定規を，60° の角が左下に来るように置き直して読みます．</p>
+            <table class="rule-table mini-table">
+              <tr><th>θ</th>${FM.DEG.map(d => `<th>${d}°</th>`).join('')}</tr>
+              ${rows}
+            </table>
+          </div>`;
+        },
+        () => `
+          <div class="tutorial-slide">
+            <p><b>余角（complementary angle）</b>：ある角と足して 90° になる角．θ の余角は ${T('90^\\circ - \\theta')}．</p>
+            <div class="figure figure-small">${figureHTML({ opp2: 9, adj2: 16, hyp2: 25, orient: STD }, { sideTex: { hyp: 'c', opp: 'a', adj: 'b' } })}</div>
+            <p class="note">直角三角形 ABC で ${T('\\angle\\mathrm{A} = \\theta')} のとき，${T('\\angle\\mathrm{B} = 90^\\circ - \\theta')}．B から見ると，向かいの辺ととなりの辺が入れかわります．</p>
+            <div class="math-line">${D('\\sin(90^\\circ - \\theta) = \\frac{b}{c} = \\cos\\theta')}</div>
+            <div class="math-line">${D('\\cos(90^\\circ - \\theta) = \\frac{a}{c} = \\sin\\theta')}</div>
+            <div class="math-line">${D('\\tan(90^\\circ - \\theta) = \\frac{b}{a} = \\frac{1}{\\tan\\theta}')}</div>
+          </div>`,
+        () => `
+          <div class="tutorial-slide">
+            <p><b>45° 以下の角で表す</b>　例：${T('\\sin 64^\\circ = \\sin(90^\\circ - 26^\\circ) = \\cos 26^\\circ')}，${T('\\tan 83^\\circ = \\frac{1}{\\tan 7^\\circ}')}</p>
+            <p class="note">答えの欄では，<span class="toggle-btn demo">sin</span> <span class="toggle-btn demo">cos</span> <span class="toggle-btn demo">tan</span> <span class="toggle-btn demo">1/tan</span> から選び，角度を入れます．</p>
+            <p><b>式の値</b>　例：${T('\\tan 35^\\circ \\tan 55^\\circ')}</p>
+            <div class="math-line">${D('= \\tan 35^\\circ \\tan(90^\\circ - 35^\\circ) = \\tan 35^\\circ \\cdot \\frac{1}{\\tan 35^\\circ} = 1')}</div>
+            <p class="note">片方の角を ${T('90^\\circ - (\\text{もう一方の角})')} に書きかえて，同じ角の三角比にそろえると，${T('\\sin^2\\theta + \\cos^2\\theta = 1')} や ${T('\\tan\\theta \\cdot \\frac{1}{\\tan\\theta} = 1')} が見えてきます．ふつうは 45° より大きい角を書きかえます．答えは整数か分数で入れます．</p>
+          </div>`
+      ]
+    },
     apply: {
       title: '三角比の活用',
       slides: [
@@ -660,6 +737,9 @@ document.addEventListener('DOMContentLoaded', () => {
     two: { name: '② 2辺から求める', label: '📏 2辺から', desc: '「?」の辺の長さを三平方の定理で求めて入力し，それから sin θ，cos θ，tan θ の値を求めます．' },
     mix: { name: '③ ミックス', label: '🔀 ミックス', desc: '①と②がランダムに出題されます．' },
     relation: { name: '⑦ 相互関係', label: '🔗 相互関係' },
+    famous: { name: '⑧ 30°・45°・60°', label: '🔺 有名角' },
+    comp: { name: '⑨ 45° 以下の角で表す', label: '🔄 余角' },
+    expr: { name: '⑩ 式の値', label: '🧮 式の値' },
     applyLen: { name: '④ 長さを求める', label: '📐 活用：長さ' },
     applyAng: { name: '⑤ 角度を求める', label: '🧭 活用：角度' },
     applyMix: { name: '⑥ 活用ミックス', label: '🎯 活用ミックス' }
@@ -791,6 +871,46 @@ document.addEventListener('DOMContentLoaded', () => {
       showFigureBtn.textContent = '📐 直角三角形で考える';
       showFigureBtn.classList.remove('hidden');
       answerList.innerHTML = prob.asks.map(k => ratioRowHTML(RATIO_ROWS.find(r => r.key === k))).join('');
+    } else if (currentCategory === 'famous') {
+      // 30°・45°・60°：値を答える／値から角を答える
+      do { prob = FM.generateFamous(); }
+      while (currentProblem && currentProblem.kind === 'famous' && currentProblem.sub === prob.sub && currentProblem.deg === prob.deg && currentProblem.fn === prob.fn);
+      currentProblem = prob;
+      problemPrompt.classList.remove('prompt-long');
+      figure.innerHTML = famousFigureHTML(prob);
+      figure.classList.add('hidden');
+      if (prob.sub === 'value') {
+        problemPrompt.innerHTML = `${T('\\' + prob.fn + '\\,' + prob.deg + '^\\circ')} の値を求めなさい．`;
+        showFigureBtn.textContent = '📐 三角定規を見る';
+        showFigureBtn.classList.remove('hidden');
+        answerList.innerHTML = ratioRowHTML({ key: prob.fn, tex: `\\${prob.fn}\\,${prob.deg}^\\circ =` });
+      } else {
+        problemPrompt.innerHTML = `θ は鋭角とする．${D('\\' + prob.fn + '\\theta = ' + prob.valTex)} のとき，θ を求めなさい．`;
+        showFigureBtn.classList.add('hidden');
+        answerList.innerHTML = numRowHTML({ kind: 'angle', mode: 'exact', label: T('\\theta =') });
+      }
+    } else if (currentCategory === 'comp') {
+      // 45° 以下の角の三角比で表す
+      do { prob = FM.generateComp(); }
+      while (currentProblem && currentProblem.kind === 'comp' && currentProblem.fn === prob.fn && currentProblem.deg === prob.deg);
+      currentProblem = prob;
+      problemPrompt.classList.remove('prompt-long');
+      problemPrompt.innerHTML = `${T('\\' + prob.fn + '\\,' + prob.deg + '^\\circ')} を，45° 以下の角の三角比で表しなさい．`;
+      figure.innerHTML = '';
+      figure.classList.add('hidden');
+      showFigureBtn.classList.add('hidden');
+      answerList.innerHTML = compRowHTML(prob);
+    } else if (currentCategory === 'expr') {
+      // 余角の関係を使って式の値を求める
+      do { prob = FM.generateExpr(); }
+      while (currentProblem && currentProblem.kind === 'expr' && currentProblem.tex === prob.tex);
+      currentProblem = prob;
+      problemPrompt.classList.remove('prompt-long');
+      problemPrompt.innerHTML = `次の式の値を求めなさい．<div class="math-line expr-line">${D(prob.tex)}</div>`;
+      figure.innerHTML = '';
+      figure.classList.add('hidden');
+      showFigureBtn.classList.add('hidden');
+      answerList.innerHTML = ratioRowHTML({ key: 'value', tex: '\\text{値} =' });
     } else {
       // 直前と同じ三角形が続かないように
       do { prob = C.generateProblem(currentCategory, Math.random, { fixed: fixedOrient }); }
@@ -827,18 +947,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function judge() {
     if (isGameOver || isLocked || !currentProblem) return;
     const rows = Array.from(answerList.querySelectorAll('.ans-row'));
-    const tg = currentProblem.kind === 'apply' ? null : C.targets(currentProblem);
+    const kind = currentProblem.kind;
+    const tg = kind === 'apply' || kind === 'comp' || kind === 'expr' ? null : C.targets(currentProblem);
     const results = rows.map(row => {
       if (row.dataset.kind === 'num') {
-        return AP.judgeApply(currentProblem, row.querySelector('.val-input').value);
+        const v = row.querySelector('.val-input').value;
+        return kind === 'famous' ? FM.judgeAngle(currentProblem, v) : AP.judgeApply(currentProblem, v);
+      }
+      if (row.dataset.kind === 'comp') {
+        return FM.judgeComp(currentProblem, { fn: row.dataset.fn, deg: row.querySelector('.val-deg').value });
       }
       if (row.dataset.kind === 'side') {
         return C.judgeSide({ k: readInt(row, 'k'), m: readInt(row, 'm'), root: row.dataset.root === '1' }, currentProblem[row.dataset.key + '2']);
       }
-      return C.judgeRatio({
+      const ans = {
         a: readInt(row, 'a'), b: readInt(row, 'b'), c: readInt(row, 'c'), d: readInt(row, 'd'),
         numRoot: row.dataset.numRoot === '1', frac: row.dataset.frac === '1', denRoot: row.dataset.denRoot === '1'
-      }, tg[row.dataset.key]);
+      };
+      return kind === 'expr' ? FM.judgeValue(currentProblem, ans) : C.judgeRatio(ans, tg[row.dataset.key]);
     });
 
     // 未入力・入力ミスはペナルティなしで知らせる
@@ -846,7 +972,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (blocking >= 0) {
       const el = Array.from(rows[blocking].querySelectorAll('.val-input')).find(x => x.offsetParent !== null && x.value.trim() === '') || rows[blocking].querySelector('.val-input');
       showFeedback(results[blocking].hint, 'info');
-      if (el) el.focus();
+      // ⑨で三角比を選んでいないときは，角度の欄に移らない（キーボードを出さない）
+      const needPick = rows[blocking].dataset.kind === 'comp' && !rows[blocking].dataset.fn;
+      if (el && !needPick) el.focus();
       return;
     }
 
@@ -929,6 +1057,28 @@ document.addEventListener('DOMContentLoaded', () => {
       html += '<p class="note">この三角形で，定義から残りの2つを求めることもできます．有理化してもしなくても正解です．</p>';
       figure.innerHTML = figureHTML(prob, { sideTex: { hyp: C.sqrtTex(prob.hyp2), opp: C.sqrtTex(prob.opp2), adj: C.sqrtTex(prob.adj2) } });
       figure.classList.remove('hidden');
+      showFigureBtn.classList.add('hidden');
+      explainBox.innerHTML = html;
+      explainBox.classList.remove('hidden');
+      showExplainBtn.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+      return;
+    }
+    if (prob.kind === 'famous' || prob.kind === 'comp' || prob.kind === 'expr') {
+      const lines = prob.kind === 'famous' ? FM.famousLines(prob) : prob.kind === 'comp' ? FM.compLines(prob) : prob.lines;
+      lines.forEach(l => {
+        if (l.text) html += `<p class="note">${richText(l.text)}</p>`;
+        if (l.tex) html += `<div class="math-line">${D(l.tex)}</div>`;
+      });
+      if (prob.kind === 'famous') {
+        figure.innerHTML = famousFigureHTML(prob);
+        figure.classList.remove('hidden');
+        if (prob.sub === 'value') html += '<p class="note">有理化してもしなくても正解です．</p>';
+      } else if (prob.kind === 'comp') {
+        html += `<p class="note answer-note">答え：${D(FM.compAnswerTex(prob))}</p>`;
+      } else {
+        html += `<p class="note answer-note">答え：${D(FM.valueTex(prob.value))}</p>`;
+      }
       showFigureBtn.classList.add('hidden');
       explainBox.innerHTML = html;
       explainBox.classList.remove('hidden');

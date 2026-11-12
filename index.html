@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <!-- canvas-confetti for effects -->
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=19">
 </head>
 <body>
 
@@ -81,6 +81,13 @@
             <div class="btn-text">
               <h3>三角比の相互関係</h3>
               <p>3つの公式と，1つの値から残りの2つを求める手順</p>
+            </div>
+          </button>
+          <button class="menu-btn tutorial-btn" data-tutorial="famous">
+            <span class="icon">🔺</span>
+            <div class="btn-text">
+              <h3>有名角・余角の三角比</h3>
+              <p>30°・45°・60° の三角比と，90° − θ の三角比</p>
             </div>
           </button>
           <button class="menu-btn tutorial-btn" data-tutorial="apply">
@@ -203,6 +210,35 @@
 
         <section class="cat-section">
           <div class="cat-head">
+            <h3>有名角・余角の三角比</h3>
+          </div>
+          <div class="menu-buttons">
+            <button class="menu-btn category-btn" data-category="famous">
+              <span class="icon">🔺</span>
+              <div class="btn-text">
+                <h3>⑧ 30°・45°・60° の三角比</h3>
+                <p>値を答える問題と，値から角を答える問題（θ は鋭角）</p>
+              </div>
+            </button>
+            <button class="menu-btn category-btn" data-category="comp">
+              <span class="icon">🔄</span>
+              <div class="btn-text">
+                <h3>⑨ 45° 以下の角で表す</h3>
+                <p>sin64° = cos26°，tan83° = 1/tan7° のように書きかえる</p>
+              </div>
+            </button>
+            <button class="menu-btn category-btn" data-category="expr">
+              <span class="icon">🧮</span>
+              <div class="btn-text">
+                <h3>⑩ 式の値</h3>
+                <p>余角の関係を使って，式の値を求める</p>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <section class="cat-section">
+          <div class="cat-head">
             <h3>三角比の活用</h3>
             <p class="cat-note">教科書の三角比の表を使って計算します</p>
           </div>
@@ -264,9 +300,10 @@
 
   <div class="feedback" id="feedback-toast"></div>
 
-  <script defer src="core.js?v=17"></script>
-  <script defer src="relation.js?v=17"></script>
-  <script defer src="apply.js?v=17"></script>
-  <script defer src="script.js?v=17"></script>
+  <script defer src="core.js?v=19"></script>
+  <script defer src="relation.js?v=19"></script>
+  <script defer src="famous.js?v=19"></script>
+  <script defer src="apply.js?v=19"></script>
+  <script defer src="script.js?v=19"></script>
 </body>
 </html>

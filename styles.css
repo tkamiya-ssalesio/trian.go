@@ -1108,3 +1108,48 @@ h1 {
   .val-input.val-num { width: 92px; }
   .ans-label-text { font-size: 14px; }
 }
+
+/* --- 有名角・余角 --- */
+.comp-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comp-fn {
+  font-family: 'KaTeX_Main', 'Times New Roman', serif;
+  font-size: 22px;
+  min-width: 1.6em;
+  text-align: right;
+  color: var(--apple-text-primary);
+}
+
+.comp-one {
+  font-family: 'KaTeX_Main', 'Times New Roman', serif;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.val-input.val-deg {
+  width: 64px;
+}
+
+.comp-picks .toggle-btn {
+  min-width: 44px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.fig-pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.expr-line {
+  margin-top: 8px;
+}
+
+.expr-line {
+  font-size: 20px;
+}
