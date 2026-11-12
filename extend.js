@@ -58,7 +58,7 @@
     return s;
   }
 
-  // 直角三角形の定義が使えるか（θ をはさむ直角三角形がつくれるのは 0° < θ < 90° だけ）
+  // 直角三角形の定義が使えるか（θ を ∠A とする直角三角形 ABC（∠C = 90°）がつくれるのは 0° < θ < 90° だけ）
   const triangleOK = deg => deg > 0 && deg < 90;
 
   const api = { FAMOUS, EXACT, COORD1, COORD2, isFamous, point, ratios, fmt, triangleOK };
@@ -136,7 +136,7 @@
     function valTex(deg, fn) {
       if (isFamous(deg)) {
         const e = EXACT[deg][fn];
-        return e === null ? '\\text{なし}' : e;
+        return e === null ? '\\text{定義できない}' : e;
       }
       const v = ratios(deg)[fn];
       return '\\fallingdotseq ' + fmt(v, 4);
@@ -150,7 +150,10 @@
       const tbl = r === 2 ? COORD2 : r === 1 ? COORD1 : null;
       if (tbl && isFamous(deg)) return `(${tbl[deg][0]},\\ ${tbl[deg][1]})`;
       const p = point(deg, r);
-      return `(${fmt(p.x)},\\ ${fmt(p.y)})`;
+      const exact = v => Math.abs(v - Number(fmt(v))) < 1e-12;
+      if (exact(p.x) && exact(p.y)) return `(${fmt(p.x)},\\ ${fmt(p.y)})`;
+      // 小数で近似したときは「＝」でつながない
+      return `(x,\\ y) \\fallingdotseq (${fmt(p.x)},\\ ${fmt(p.y)})`;
     }
     const slider = (id, min, max, val, label) => `
       <div class="slider-row ex-slider">
@@ -170,7 +173,7 @@
         s += line(O1, C, C_ADJ, 3) + line(C, B, C_OPP, 3) + line(O1, B, C_HYP, 3) + rightMark(C, 1);
         s += text([C[0], C[1] + 18], 'C', 'ex-t ex-pt');
       } else {
-        // 90° 以上：θ をもつ直角三角形はないので，角だけを描く
+        // 90° 以上：∠A = θ，∠C = 90° の直角三角形はないので，角だけを描く
         s += line(O1, [O1[0] + L1, O1[1]], INK, 3) + line(O1, B, C_HYP, 3);
         s += text([O1[0] + L1 / 2 + 20, 40], '直角三角形が', 'ex-t ex-small ex-neg', 'start');
         s += text([O1[0] + L1 / 2 + 20, 60], 'つくれない', 'ex-t ex-small ex-neg', 'start');
@@ -183,15 +186,15 @@
     }
     function info1(deg) {
       if (deg < 90) {
-        return `<p>θ が <b>${deg}°</b>（鋭角）．θ をはさむ直角三角形 ABC がつくれるので</p>
+        return `<p>θ が <b>${deg}°</b>（鋭角）．∠C = 90°，∠A = θ の直角三角形 ABC がつくれるので</p>
           <div class="math-line">${D(`\\sin\\theta = \\frac{\\textcolor{#ea580c}{\\mathrm{BC}}}{\\textcolor{#0f766e}{\\mathrm{AB}}},\\quad \\cos\\theta = \\frac{\\textcolor{#7c3aed}{\\mathrm{AC}}}{\\textcolor{#0f766e}{\\mathrm{AB}}},\\quad \\tan\\theta = \\frac{\\textcolor{#ea580c}{\\mathrm{BC}}}{\\textcolor{#7c3aed}{\\mathrm{AC}}}`)}</div>`;
       }
       if (deg === 90) {
         return `<p class="warning">θ = 90°：B から下ろした垂線の足 C が A に重なって，三角形がつぶれてしまいます．</p>
-          <p>直角三角形には，90° の角は直角の1つしか入りません．θ = 90° の直角三角形もつくれません．</p>`;
+          <p>直角三角形 ABC では ∠C が直角です．∠A = θ まで 90° にすると直角が2つになり，三角形になりません．</p>`;
       }
-      return `<p class="warning">θ = ${deg}°：θ をはさむ直角三角形がつくれません．</p>
-        <p>直角三角形の内角は 90° と鋭角2つなので，<b>90° 以上の角 θ をもつ直角三角形はありません</b>．</p>
+      return `<p class="warning">θ = ${deg}°：θ を ∠A とする直角三角形がつくれません．</p>
+        <p>∠C = 90° の直角三角形 ABC では，残りの ∠A，∠B はどちらも鋭角です．だから，<b>${T('\\theta \\geqq 90^\\circ')} のとき，∠A = θ，∠C = 90° の直角三角形 ABC はつくれません</b>．</p>
         <p class="highlight-box">「辺の比」の定義のままでは，${T(`\\sin ${deg}^\\circ`)} を決められない．</p>`;
     }
 
@@ -246,6 +249,7 @@
       s += semicircle(O3, U3 * R3, MUTE, '5 5');
       s += text([O3[0] + U3 * R3, O3[1] + 14], '2', 'ex-t ex-small ex-mute');
       s += text([O3[0] - U3 * R3, O3[1] + 14], '−2', 'ex-t ex-small ex-mute');
+      s += text([O3[0] + U3 * R3 + 8, O3[1] - 12], 'A', 'ex-t ex-pt', 'start');
       s += arc(O3, 26, 0, deg, 'var(--theme-accent)', 2.5, 'rgba(234,88,12,0.14)');
       if (Math.abs(p.x) > 0.01) s += line(O3, F, C_ADJ, 4);
       if (p.y > 0.01) s += line(F, P, C_OPP, 4, 'stroke-dasharray="1 0"');
@@ -263,7 +267,7 @@
       const row = fn => {
         const def = { sin: '\\frac{y}{r}', cos: '\\frac{x}{r}', tan: '\\frac{y}{x}' }[fn];
         const left = ok ? D(valTex(deg, fn)) : '<span class="ex-x">×（三角形がない）</span>';
-        const right = (fn === 'tan' && deg === 90) ? '<span class="ex-x">x = 0 で割れない</span>' : D(`${def} ${eqTex(deg, fn)}`);
+        const right = (fn === 'tan' && deg === 90) ? '<span class="ex-x">分母 x が 0 なので定義できない</span>' : D(`${def} ${eqTex(deg, fn)}`);
         return `<tr><th>${T('\\' + fn + '\\theta')}</th><td>${left}</td><td>${right}</td></tr>`;
       };
       return `<p>半径 ${T('r = 2')} の半円上で，${T(`\\theta = ${deg}^\\circ`)} のとき ${T('\\mathrm{P}' + coordTex(deg, 2))}</p>
@@ -271,7 +275,7 @@
           <tr><th></th><th>直角三角形の辺の比</th><th>座標の比</th></tr>
           ${row('sin')}${row('cos')}${row('tan')}
         </table>
-        <p class="note">${ok ? 'θ が鋭角の間は，どちらで求めても同じ値です．' : (deg >= 90 && deg < 180 ? '三角形はつくれなくても，P の座標は読めます．<b>長さは負になりませんが，座標は負になれる</b>ので，鈍角（obtuse angle）では x が負です．' : '三角形はつぶれていますが，P の座標は読めます．')}</p>`;
+        <p class="note">${ok ? 'θ が鋭角の間は，どちらで求めても同じ値です．' : (deg > 90 && deg < 180 ? '三角形はつくれなくても，P の座標は読めます．<b>長さは負になりませんが，座標は負になれる</b>ので，鈍角（obtuse angle）では x が負です．' : '三角形はつぶれていますが，P の座標は読めます．')}</p>`;
     }
 
     // ============ 4 r はいくつでも同じ → r = 1 ============
@@ -291,26 +295,47 @@
       s += text([P[0] + (p.x < 0 ? -10 : 10), P[1] - 12], 'P', 'ex-t ex-pt', p.x < 0 ? 'end' : 'start');
       return s;
     }
-    function info4(deg, r) {
-      const p = point(deg, r);
-      const cell = (num, fn) => `\\frac{${fmt(num)}}{${fmt(r, 1)}}`;
+    function info4(deg, r, tried) {
+      const p = point(deg, r), famous = isFamous(deg);
+      const exactNum = v => Math.abs(v - Number(fmt(v))) < 1e-12;
+      // 分数の行．小数で近似したら「≒」，正確な値なら「＝」
+      const row = (fn, v, L) => {
+        const dec = fmt(v / r, 3), ex = famous ? EXACT[deg][fn] : null;
+        const tail = ex !== null && ex.indexOf('sqrt') >= 0 ? ` \\fallingdotseq ${dec}` : '';
+        let body;
+        if (r === 1) body = famous ? `= ${L} = ${ex}${tail}` : `= ${L} \\fallingdotseq ${dec}`;
+        else if (famous && r === 2) {
+          const f = `\\frac{${COORD2[deg][fn === 'sin' ? 1 : 0]}}{2}`;
+          body = f === ex ? `= ${ex}${tail}` : `= ${f} = ${ex}${tail}`;
+        }
+        else if (exactNum(v)) body = `= \\frac{${fmt(v)}}{${fmt(r, 1)}} = ${famous ? ex : dec}`;
+        else body = `\\fallingdotseq \\frac{${fmt(v)}}{${fmt(r, 1)}} \\fallingdotseq ${dec}`;
+        return `\\${fn}\\theta = \\frac{${L}}{r} ${body}`;
+      };
       const one = r === 1;
-      return `<p>${T(`\\theta = ${deg}^\\circ,\\ r = ${r}`)} のとき ${T('\\mathrm{P}(' + fmt(p.x) + ',\\ ' + fmt(p.y) + ')')}</p>
+      let html = `<p>${T(`\\theta = ${deg}^\\circ,\\ r = ${r}`)} のとき ${T('\\mathrm{P}' + coordTex(deg, r))}</p>
         <div class="visual-box">
-          <div class="math-line">${D(`\\sin\\theta = \\frac{y}{r} = ${cell(p.y)} ${eqTex(deg, 'sin')}`)}</div>
-          <div class="math-line">${D(`\\cos\\theta = \\frac{x}{r} = ${cell(p.x)} ${eqTex(deg, 'cos')}`)}</div>
-        </div>
-        ${one
-          ? `<p class="highlight-box">${T('r = 1')} なら分母が 1 なので，<b>${T('\\sin\\theta')} は P の y 座標，${T('\\cos\\theta')} は P の x 座標そのもの</b>．</p>
-             <p>だから，これからは半径 1 の半円（<b>単位円（unit circle）</b>）で考えます．</p>`
-          : `<p>r を変えても，比の値は変わりません（大きさによらない＝相似）．</p>
-             <p>でも，これまでは角ごとに<b>計算しやすい r を選び直して</b>いました．</p>
-             <table class="ex-table ex-table-2">
-               <tr><td>${T('30^\\circ,\\ 150^\\circ')} なら</td><td>${T('r = 2')}</td><td>${T('\\mathrm{P}(\\pm\\sqrt{3},\\ 1)')}</td></tr>
-               <tr><td>${T('45^\\circ,\\ 135^\\circ')} なら</td><td>${T('r = \\sqrt{2}')}</td><td>${T('\\mathrm{P}(\\pm 1,\\ 1)')}</td></tr>
-               <tr><td>${T('60^\\circ,\\ 120^\\circ')} なら</td><td>${T('r = 2')}</td><td>${T('\\mathrm{P}(\\pm 1,\\ \\sqrt{3})')}</td></tr>
-             </table>
-             <p>角ごとにバラバラでは面倒です．<b>どの角でも同じ r にそろえる</b>なら，いくつがいちばん楽でしょう？</p>`}`;
+          <div class="math-line">${D(row('sin', p.y, 'y'))}</div>
+          <div class="math-line">${D(row('cos', p.x, 'x'))}</div>
+        </div>`;
+      if (one) {
+        // 先に「答え合わせ」を押しても，r によらないことと r をそろえる動機を飛ばさない
+        return html + `<p>半径 1 のときの P の x 座標，y 座標は，半径 r では<b>どちらも r 倍</b>になります．だから ${T('\\frac{y}{r}')}，${T('\\frac{x}{r}')}，${T('\\frac{y}{x}')} は<b>変わりません</b>．</p>
+          <p>角ごとにバラバラだった r（30° は 2，45° は √2）を，分母が 1 になる <b>r = 1 にそろえます</b>．</p>
+          <p class="highlight-box">${T('r = 1')} なら分母が 1 なので，<b>${T('\\sin\\theta')} は P の y 座標，${T('\\cos\\theta')} は P の x 座標そのもの</b>．</p>
+          <p><b>単位円（unit circle）</b>：原点を中心とする半径 1 の円．ここでは，その上半分の半円を使います．</p>`;
+      }
+      if (tried < 2) {
+        return html + `<p>θ はそのままで <b>r を動かして</b>，${T('\\sin\\theta')}・${T('\\cos\\theta')} の値を r ごとに比べてみよう．</p>`;
+      }
+      return html + `<p>半径 1 のときの P の x 座標，y 座標は，半径 r では<b>どちらも r 倍</b>になります．だから ${T('\\frac{y}{r}')}，${T('\\frac{x}{r}')}，${T('\\frac{y}{x}')} は<b>変わりません</b>．</p>
+        <p>教科書の例4や練習12では，角ごとに<b>計算しやすい r を選んで</b>いました．</p>
+        <table class="ex-table ex-table-2">
+          <tr><td>${T('30^\\circ,\\ 150^\\circ')} なら</td><td>${T('r = 2')}</td><td>${T('\\mathrm{P}(\\pm\\sqrt{3},\\ 1)')}</td></tr>
+          <tr><td>${T('45^\\circ,\\ 135^\\circ')} なら</td><td>${T('r = \\sqrt{2}')}</td><td>${T('\\mathrm{P}(\\pm 1,\\ 1)')}</td></tr>
+          <tr><td>${T('60^\\circ,\\ 120^\\circ')} なら</td><td>${T('r = 2')}</td><td>${T('\\mathrm{P}(\\pm 1,\\ \\sqrt{3})')}</td></tr>
+        </table>
+        <p>角ごとにバラバラでは面倒です．<b>どの角でも同じ r にそろえる</b>なら，いくつがいちばん楽でしょう？</p>`;
     }
 
     // ============ 5 単位円で自由に試す ============
@@ -330,6 +355,7 @@
       s += semicircle(O5, U5, 'var(--theme-primary)', null, 2);
       s += text([O5[0] + U5 + 4, O5[1] + 14], '1', 'ex-t ex-small ex-mute', 'start');
       s += text([O5[0] - U5 - 4, O5[1] + 14], '−1', 'ex-t ex-small ex-mute', 'end');
+      s += text([O5[0] + U5 + 7, O5[1] - 11], 'A', 'ex-t ex-pt', 'start');
       // 有名角の目印
       FAMOUS.forEach(d => {
         const q = toPx(O5, U5, point(d, 1).x, point(d, 1).y);
@@ -390,13 +416,16 @@
     }
     function info5(deg, opt) {
       const r = ratios(deg);
-      const tanCell = deg === 90 ? '<span class="ex-x">なし（x = 0）</span>' : D(`\\frac{y}{x} ${eqTex(deg, 'tan')}`);
+      const tanCell = deg === 90 ? '<span class="ex-x">定義できない</span>' : D(`\\frac{y}{x} ${eqTex(deg, 'tan')}`);
       let html = `<p>${T(`\\theta = ${deg}^\\circ`)}　${T('\\mathrm{P}' + coordTex(deg, 1))}</p>
         <table class="ex-table ex-table-2">
           <tr><th>${T('\\sin\\theta')}</th><td>${D(`y ${eqTex(deg, 'sin')}`)}</td><td class="ex-sign">${r.sin > 1e-9 ? '＋' : '0'}</td></tr>
           <tr><th>${T('\\cos\\theta')}</th><td>${D(`x ${eqTex(deg, 'cos')}`)}</td><td class="ex-sign ${r.cos < -1e-9 ? 'ex-neg' : ''}">${r.cos > 1e-9 ? '＋' : r.cos < -1e-9 ? '−' : '0'}</td></tr>
           <tr><th>${T('\\tan\\theta')}</th><td>${tanCell}</td><td class="ex-sign ${r.tan !== null && r.tan < -1e-9 ? 'ex-neg' : ''}">${r.tan === null ? '' : r.tan > 1e-9 ? '＋' : r.tan < -1e-9 ? '−' : '0'}</td></tr>
         </table>`;
+      if (deg === 90) {
+        html += `<p class="note">${T('\\theta = 90^\\circ')} では x = 0 なので ${T('\\frac{y}{x}')} が計算できず，${T('\\tan 90^\\circ')} は定義できません．${opt.tan ? '直線 OP（y 軸）と直線 x = 1 は平行で交わらないので，T もありません．' : ''}</p>`;
+      }
       if (opt.tan && deg !== 90) {
         html += `<p class="note">直線 OP と直線 ${T('x = 1')} の交点 T の y 座標が ${T('\\tan\\theta')}．${Math.abs(r.tan) > 1.9 ? '（T は図の外まで行っています）' : ''}</p>`;
       }
@@ -435,7 +464,7 @@
     }
 
     // ---------------- スライド ----------------
-    const state = { d1: 30, d2: 35, c2: false, d3: 120, d4: 60, r4: 2, d5: 120, tan: false, supp: false, d7: 60 };
+    const state = { d1: 30, d2: 35, c2: false, d3: 120, d4: 60, r4: 2, d5: 120, tan: false, supp: false, d7: 60, rTried: new Set([2]) };
 
     const slides = [
       () => `
@@ -469,7 +498,7 @@
       () => `
         <div class="tutorial-slide ex-slide">
           <div class="ex-lead">
-            <p>P を半径 ${T('r')} の半円の上で動かせば，<b>90° を超えても P の座標は読めます</b>．そこで，${T('\\sin\\theta = \\frac{y}{r},\\ \\cos\\theta = \\frac{x}{r},\\ \\tan\\theta = \\frac{y}{x}')} を<span class="highlight">新しい定義</span>にします．</p>
+            <p>半円と x 軸の正の部分との交点を A とし，<b>∠AOP = θ となる点 P</b> を半径 ${T('r')} の半円の上にとります．P なら <b>90° を超えても座標が読めます</b>．そこで，${T('\\sin\\theta = \\frac{y}{r},\\ \\cos\\theta = \\frac{x}{r},\\ \\tan\\theta = \\frac{y}{x}')} を<span class="highlight">新しい定義</span>にします．</p>
           </div>
           <div class="ex-stage">
             ${svgWrap(H3, fig3(state.d3), 'ex3-svg')}
@@ -492,16 +521,16 @@
               <span class="ex-slabel">${T('r =')} <b id="ex4r-v">${state.r4}</b></span>
               <input type="range" id="ex4r" min="1" max="3" step="0.5" value="${state.r4}">
             </div>
-            <div class="ex-btns"><button type="button" class="primary-btn" id="ex4-one">r = 1 にしてみる</button></div>
+            <div class="ex-btns"><button type="button" class="primary-btn" id="ex4-one">答え合わせ ▶</button></div>
           </div>
           <div class="ex-side">
-            <div id="ex4-info" class="ex-info">${info4(state.d4, state.r4)}</div>
+            <div id="ex4-info" class="ex-info">${info4(state.d4, state.r4, state.rTried.size)}</div>
           </div>
         </div>`,
       () => `
         <div class="tutorial-slide ex-slide">
           <div class="ex-lead">
-            <p>単位円の上で <b>P をドラッグ</b>してみましょう（図のどこをタップしても動きます）．</p>
+            <p>単位円の上半分（半径 1 の半円）の上で <b>P をドラッグ</b>してみましょう（図のどこをタップしても動きます）．</p>
           </div>
           <div class="ex-stage">
             ${(() => { const f = fig5(state.d5, state); return svgWrap(H5, f, 'ex5-svg'); })()}
@@ -519,31 +548,36 @@
       () => `
         <div class="tutorial-slide ex-slide">
           <div class="ex-lead">
-            <p class="highlight-box">${T('0^\\circ \\leqq \\theta \\leqq 180^\\circ')} の三角比は，<b>単位円の上の点 P(x, y)</b> で決める．</p>
+            <p class="highlight-box">原点 O を中心とする半径 1 の半円の上に，<b>∠AOP = θ となる点 P(x, y)</b> をとる（A(1, 0)）．${T('0^\\circ \\leqq \\theta \\leqq 180^\\circ')} の三角比はこの P で決める．</p>
             <div class="visual-box">
-              <div class="math-line">${D('\\sin\\theta = y,\\quad \\cos\\theta = x,\\quad \\tan\\theta = \\frac{y}{x}')}</div>
+              <div class="math-line">${D('\\sin\\theta = y,\\quad \\cos\\theta = x,\\quad \\tan\\theta = \\frac{y}{x}\\ (\\theta \\neq 90^\\circ)')}</div>
             </div>
           </div>
           <div class="ex-stage">
             <table class="ex-table">
-              <tr><th></th><th>${T('0^\\circ<\\theta<90^\\circ')}<br><span class="note">鋭角</span></th><th>${T('90^\\circ')}</th><th>${T('90^\\circ<\\theta<180^\\circ')}<br><span class="note">鈍角（obtuse angle）</span></th></tr>
+              <tr><th></th><th>${T('0^\\circ<\\theta<90^\\circ')}<br><span class="note">鋭角</span></th><th>${T('90^\\circ')}</th><th>${T('90^\\circ<\\theta<180^\\circ')}<br><span class="note">鈍角</span></th></tr>
               <tr><th>${T('\\sin\\theta')}</th><td>＋</td><td>1</td><td>＋</td></tr>
               <tr><th>${T('\\cos\\theta')}</th><td>＋</td><td>0</td><td class="ex-neg">−</td></tr>
-              <tr><th>${T('\\tan\\theta')}</th><td>＋</td><td>なし</td><td class="ex-neg">−</td></tr>
+              <tr><th>${T('\\tan\\theta')}</th><td>＋</td><td class="ex-x">定義できない</td><td class="ex-neg">−</td></tr>
             </table>
           </div>
           <div class="ex-side">
             <ul class="term-list">
-              <li><b>なぜ座標？</b>　90° 以上の角をはさむ直角三角形はつくれない．でも点の座標なら 0°〜180° のどこでも読める．</li>
-              <li><b>なぜ単位円？</b>　30° は r = 2，45° は r = √2 と，角ごとにバラバラだった半径を<b>1つにそろえたい</b>．三角比は r によらないので，分母が消える ${T('r = 1')} にそろえる．すると sin θ と cos θ が座標そのものになる．</li>
-              <li><b>鋭角（acute angle）</b>のときは，これまでの辺の比と同じ値になる（定義を広げても前の答えは変わらない）．</li>
+              <li><b>なぜ座標？</b>　∠C = 90° の直角三角形 ABC では ∠A は鋭角なので，${T('\\theta \\geqq 90^\\circ')} のとき ∠A = θ とする直角三角形 ABC はつくれない．でも点の座標なら 0°〜180° のどこでも読める．</li>
+              <li><b>なぜ単位円？</b>　30° は r = 2，45° は r = √2 と，角ごとにバラバラだった半径を<b>1つにそろえたい</b>．三角比は r によらないので，分母が 1 になる ${T('r = 1')} にそろえる．すると sin θ と cos θ が座標そのものになる．</li>
+              <li>θ が鋭角のときは，これまでの辺の比と同じ値になる（定義を広げても前の答えは変わらない）．</li>
+            </ul>
+            <ul class="term-list">
+              <li><b>鋭角（acute angle）</b>：0° より大きく 90° より小さい角．</li>
+              <li><b>鈍角（obtuse angle）</b>：90° より大きく 180° より小さい角．</li>
+              <li><b>単位円（unit circle）</b>：原点を中心とする半径 1 の円．</li>
             </ul>
           </div>
         </div>`,
       () => `
         <div class="tutorial-slide ex-slide">
           <div class="ex-lead">
-            <p class="highlight-box"><b>コラム：なぜ「正弦」とよぶの？</b>　じつは，三角比は<b>直角三角形より先に円から</b>生まれました．</p>
+            <p class="highlight-box"><b>コラム：なぜ「正弦」とよぶの？</b>　三角比の表は，最初は<b>円の弦の長さの表</b>として作られました．</p>
           </div>
           <div class="ex-stage">
             ${svgWrap(H7, fig7(state.d7), 'ex7-svg')}
@@ -553,12 +587,13 @@
           <div class="ex-side">
             <ul class="term-list">
               <li><b>2世紀</b>　プトレマイオス（ギリシャ）が，半径 60 の円で<b>弦の長さの表</b>をつくった（天文学の計算のため）．</li>
-              <li><b>500年ごろ</b>　インドのアーリヤバタが，<b>弦の半分</b>の表をつくり jya とよんだ．これが今の sin．</li>
-              <li><b>その後</b>　アラビア語で jiba → jaib（「折り目」）となり，12世紀にラテン語へ訳すときに sinus（「入り江」）とされた．英語の sine はここから．</li>
-              <li><b>1748年</b>　オイラーが<b>円の半径をいつも 1 にした</b>．それまで sin は円の中の「長さ」で，表ごとに半径がばらばらだった．半径を 1 にそろえて，sin は1つの「数」になった（4枚目の ${T('r = 1')} と同じ考え）．</li>
-              <li><b>余弦（cosine）</b>は「余角の正弦」．${T('\\cos\\theta = \\sin(90^\\circ - \\theta)')} で，英語の co-sine も complement（余角）の sine から．</li>
+              <li><b>500年ごろ</b>　インドのアーリヤバタが，半径 3438 の円で<b>弦の半分</b>の表をつくり jya とよんだ．これが今の sin のもと．</li>
+              <li><b>ことば</b>　jya はもともと「弓のつる」という意味．漢字の「弦」も弓のつるのことで，円の弦は弓に張ったつるの形から．<b>正弦の「弦」も，この弦</b>のことです．</li>
+              <li><b>その後</b>　アラビア語で jiba → jaib と取り違えられ，12世紀にラテン語へ訳すときに sinus（「ふところ」「入り江」の意味）とされたと言われています．英語の sine はここから．</li>
+              <li><b>1748年</b>　オイラーが本の中で，<b>半径 1 の円</b>で sin・cos を「数」として扱う書き方を広めた．それまで sin は円の中の「長さ」で，表ごとに半径がばらばらだった（4枚目の ${T('r = 1')} と同じ考え）．</li>
+              <li><b>余弦（cosine）</b>は「余角の正弦」．${T('0^\\circ \\leqq \\theta \\leqq 90^\\circ')} のとき ${T('\\cos\\theta = \\sin(90^\\circ - \\theta)')} で，英語の co-sine も complement（余角）の sine から．</li>
             </ul>
-            <p class="note">教科書は「直角三角形 → 円」の順ですが，歴史では「円 → 直角三角形」の順でした．円で考えるのは，むしろ元の形にもどることなのです．</p>
+            <p class="note">教科書は「直角三角形 → 円」の順ですが，歴史では「円 → 直角三角形」の順でした．円で考えるのは，元の考え方に近いのです．</p>
           </div>
         </div>`
     ];
@@ -588,10 +623,10 @@
         let last = -1;
         $('ex3-play').addEventListener('click', e => play(e.currentTarget, 0, 180, 7000, d => { if (d !== last) { last = d; draw(d); } }, alive('ex3-svg')));
       } else if (index === 3) {
-        const draw = () => { setSlider('ex4', state.d4); setSlider('ex4r', state.r4); $('ex4-svg').innerHTML = fig4(state.d4, state.r4); $('ex4-info').innerHTML = info4(state.d4, state.r4); };
+        const draw = () => { setSlider('ex4', state.d4); setSlider('ex4r', state.r4); $('ex4-svg').innerHTML = fig4(state.d4, state.r4); $('ex4-info').innerHTML = info4(state.d4, state.r4, state.rTried.size); };
         bindSlider('ex4', d => { state.d4 = d; draw(); });
-        bindSlider('ex4r', r => { state.r4 = r; draw(); });
-        $('ex4-one').addEventListener('click', () => { state.r4 = 1; draw(); });
+        bindSlider('ex4r', r => { state.r4 = r; state.rTried.add(r); draw(); });
+        $('ex4-one').addEventListener('click', () => { state.r4 = 1; state.rTried.add(1); state.rTried.add(2); draw(); });
       } else if (index === 4) {
         const svg = $('ex5-svg');
         const draw = d => {
