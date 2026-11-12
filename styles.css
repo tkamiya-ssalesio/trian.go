@@ -1186,7 +1186,7 @@ text.ex-neg { fill: var(--apple-red); }
 .ex-checks { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; font-size: 14px; }
 .ex-checks input { accent-color: var(--theme-primary); margin-right: 4px; }
 
-/* 三角比の拡張：横長の画面では図と説明を左右に並べ，スクロールなしで1枚に収める */
+/* 三角比の拡張：横長の画面では説明を左，図を右に並べ，スクロールなしで1枚に収める */
 .ex-slide .ex-lead,
 .ex-slide .ex-stage,
 .ex-slide .ex-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
@@ -1194,8 +1194,8 @@ text.ex-neg { fill: var(--apple-red); }
   .container:has(.ex-slide) { max-width: min(1280px, 96vw); }
   .ex-slide {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    grid-template-areas: "stage lead" "stage side";
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-areas: "lead stage" "side stage";
     grid-template-rows: auto 1fr;
     gap: 14px 28px;
     align-items: start;
