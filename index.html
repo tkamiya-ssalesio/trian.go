@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <!-- canvas-confetti for effects -->
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=19">
+  <link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
 
@@ -88,6 +88,13 @@
             <div class="btn-text">
               <h3>有名角・余角の三角比</h3>
               <p>30°・45°・60° の三角比と，90° − θ の三角比</p>
+            </div>
+          </button>
+          <button class="menu-btn tutorial-btn" data-tutorial="extend">
+            <span class="icon">🌙</span>
+            <div class="btn-text">
+              <h3>三角比の拡張（0°〜180°）</h3>
+              <p>なぜ座標を使うのか，なぜ単位円なのかを動かして確かめる</p>
             </div>
           </button>
           <button class="menu-btn tutorial-btn" data-tutorial="apply">
@@ -300,10 +307,11 @@
 
   <div class="feedback" id="feedback-toast"></div>
 
-  <script defer src="core.js?v=19"></script>
-  <script defer src="relation.js?v=19"></script>
-  <script defer src="famous.js?v=19"></script>
-  <script defer src="apply.js?v=19"></script>
-  <script defer src="script.js?v=19"></script>
+  <script defer src="core.js?v=21"></script>
+  <script defer src="relation.js?v=21"></script>
+  <script defer src="famous.js?v=21"></script>
+  <script defer src="apply.js?v=21"></script>
+  <script defer src="extend.js?v=21"></script>
+  <script defer src="script.js?v=21"></script>
 </body>
 </html>

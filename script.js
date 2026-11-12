@@ -702,6 +702,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  if (window.TrianExtend) tutorials.extend = window.TrianExtend.create({ T, D });
+
   let activeTutorial = null;
   let currentSlideIndex = 0;
 

@@ -1153,3 +1153,35 @@ h1 {
 .expr-line {
   font-size: 20px;
 }
+
+/* --- 三角比の拡張（extend.js） --- */
+.ex-figure { max-width: 460px; }
+.ex-figure svg { touch-action: none; }
+#ex5-svg { cursor: pointer; }
+.ex-t { font-family: Georgia, 'Times New Roman', serif; font-size: 15px; fill: var(--apple-text-primary); }
+.ex-var { font-style: italic; font-size: 18px; font-weight: 700; }
+.ex-pt { font-size: 16px; }
+.ex-theta { font-style: italic; font-size: 19px; fill: var(--theme-accent); }
+.ex-small { font-size: 13px; font-family: 'Inter', sans-serif; font-weight: 600; }
+.ex-mute { fill: #64748b; }
+.ex-hyp { fill: var(--c-hyp); }
+.ex-opp { fill: var(--c-opp); }
+.ex-adj { fill: var(--c-adj); }
+.ex-tan { fill: #0369a1; }
+text.ex-neg { fill: var(--apple-red); }
+.ex-neg { color: var(--apple-red); font-weight: 700; }
+.ex-x { color: var(--apple-red); font-weight: 700; font-size: 13px; }
+.ex-slabel { min-width: 88px; white-space: nowrap; }
+.ex-btns { display: flex; justify-content: center; gap: 10px; }
+.ex-btns button { width: auto; padding: 10px 22px; }
+.ex-info { display: flex; flex-direction: column; gap: 10px; min-height: 120px; }
+.ex-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: center; }
+.ex-table th, .ex-table td { border: 1px solid var(--glass-border); padding: 6px 4px; vertical-align: middle; }
+.ex-table:not(.ex-table-2) tr:first-child th { background: rgba(var(--theme-primary-rgb), 0.08); font-size: 13px; }
+.ex-table-2 td:first-child { text-align: left; padding-left: 12px; }
+.ex-sign { width: 40px; font-weight: 700; }
+.ex-famous { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.ex-chip { border: 1.5px solid var(--glass-border); background: var(--apple-input-bg); color: var(--apple-text-primary); border-radius: 999px; padding: 5px 11px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.ex-chip:hover { border-color: var(--theme-primary); color: var(--theme-primary); }
+.ex-checks { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; font-size: 14px; }
+.ex-checks input { accent-color: var(--theme-primary); margin-right: 4px; }
