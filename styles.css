@@ -1016,6 +1016,35 @@ h1 {
   color: var(--apple-text-secondary);
 }
 
+/* --- 総合ミックス：出す単元を選ぶ --- */
+.unit-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.unit-chip {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--apple-text-secondary);
+  cursor: pointer;
+}
+
+.unit-chip.active {
+  background: rgba(var(--theme-primary-rgb), 0.1);
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+}
+
+.unit-chip.active::before {
+  content: "✓ ";
+}
+
 /* --- 三角比の活用：数を1つ答える欄 --- */
 .ans-row-num {
   grid-template-columns: minmax(84px, auto) 1fr 28px;

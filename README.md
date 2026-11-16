@@ -45,6 +45,8 @@
    勾配（%・‰・「1/n 以下」）や辺の長さから，表で角度を引きます．
 6. **🎯 ⑥ 活用ミックス**
    ④と⑤がランダムに出題されます．
+17. **🌈 ⑰ 総合ミックス**
+   ①〜⑯ の問題の種類がまざって出ます．「定義」「相互関係」「有名角・余角」「0°〜180°」「活用」のうち出す単元を選べます（端末が覚えておきます）．単元を同じ割合で選び，その中の種類を同じ割合で選ぶので，種類の多い単元ばかりにはなりません．直前と同じ種類は続けて出しません．4つのゲームモードのどれでも遊べます．
 
 ### 🌲 三角比の活用の判定
 * sin・cos・tan を使う問題が同じ割合で出ます．
@@ -93,6 +95,7 @@ node tests/relation.test.js
 node tests/famous.test.js
 node tests/extend.test.js
 node tests/wide.test.js
+node tests/mix.test.js
 ```
 プリントの解答例（三角比・三角比の活用），書き方のルール，約3億通りの入力パターンの総当たり（正解になるのは値が等しく最も簡単な形だけか），三角形とラベルの配置を検査します．
 
@@ -103,7 +106,7 @@ node tests/wide.test.js
 A gamified web training app for the introduction of trigonometric ratios (sine, cosine, tangent) in Japanese high school Math I. The name comes from how students read "triangle" in katakana.
 
 ## ✨ Features
-* **16 categories:** (1) all three sides given, (2) two sides given — find the third with the Pythagorean theorem first, (3) mixed; and applications with a trig table: (4) find a length (heights, slopes, angles of elevation and depression), (5) find an angle from a gradient or two sides, (6) mixed; and (7) trigonometric identities — given one of sin, cos, tan of an acute angle, find the other two; (8) sin, cos, tan of 30°, 45°, 60° and the reverse (find the acute angle); (9) rewrite with an angle of 45° or less using complementary angles (sin 64° = cos 26°, tan 83° = 1/tan 7°); (10) evaluate expressions using complementary angles; and for 0° ≤ θ ≤ 180°: (11) values at 0°–180°, (12) rewrite obtuse angles with an angle of 45° or less, (13) trigonometric equations, (14) slope of a line and its angle with the x-axis, (15) given one ratio, find the other two (with signs), (16) expressions using 180° − θ.
+* **17 categories:** (1) all three sides given, (2) two sides given — find the third with the Pythagorean theorem first, (3) mixed; and applications with a trig table: (4) find a length (heights, slopes, angles of elevation and depression), (5) find an angle from a gradient or two sides, (6) mixed; and (7) trigonometric identities — given one of sin, cos, tan of an acute angle, find the other two; (8) sin, cos, tan of 30°, 45°, 60° and the reverse (find the acute angle); (9) rewrite with an angle of 45° or less using complementary angles (sin 64° = cos 26°, tan 83° = 1/tan 7°); (10) evaluate expressions using complementary angles; and for 0° ≤ θ ≤ 180°: (11) values at 0°–180°, (12) rewrite obtuse angles with an angle of 45° or less, (13) trigonometric equations, (14) slope of a line and its angle with the x-axis, (15) given one ratio, find the other two (with signs), (16) expressions using 180° − θ; and (17) an all-in-one mix of every problem type, with selectable units.
 * Application answers computed with the 4-digit table are accepted within ±1 in the last digit.
 * The angle θ and the right-angle mark are always shown, and the triangle is rotated or reflected at random every time.
 * Answers must be in simplest form (reduced fractions, simplified radicals). **Rationalizing the denominator is optional** — both 2/√5 and 2√5/5 are accepted.

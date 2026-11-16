@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <!-- canvas-confetti for effects -->
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="styles.css?v=27">
 </head>
 <body>
 
@@ -331,6 +331,29 @@
             </button>
           </div>
         </section>
+
+        <section class="cat-section mix-section">
+          <div class="cat-head">
+            <h3>総合ミックス</h3>
+            <p class="cat-note">選んだ単元の問題がまざって出ます</p>
+          </div>
+          <div class="unit-chips" id="mix-units">
+            <button type="button" class="unit-chip" data-unit="define">定義</button>
+            <button type="button" class="unit-chip" data-unit="relation">相互関係</button>
+            <button type="button" class="unit-chip" data-unit="famous">有名角・余角</button>
+            <button type="button" class="unit-chip" data-unit="wide">0°〜180°</button>
+            <button type="button" class="unit-chip" data-unit="apply">活用</button>
+          </div>
+          <div class="menu-buttons">
+            <button class="menu-btn category-btn" data-category="allMix">
+              <span class="icon">🌈</span>
+              <div class="btn-text">
+                <h3>⑰ 総合ミックス</h3>
+                <p id="mix-desc">①〜⑯ の問題の種類がランダムに出題される</p>
+              </div>
+            </button>
+          </div>
+        </section>
       </div>
 
       <!-- 7. Problem Area -->
@@ -365,12 +388,13 @@
 
   <div class="feedback" id="feedback-toast"></div>
 
-  <script defer src="core.js?v=26"></script>
-  <script defer src="relation.js?v=26"></script>
-  <script defer src="famous.js?v=26"></script>
-  <script defer src="wide.js?v=26"></script>
-  <script defer src="apply.js?v=26"></script>
-  <script defer src="extend.js?v=26"></script>
-  <script defer src="script.js?v=26"></script>
+  <script defer src="core.js?v=27"></script>
+  <script defer src="relation.js?v=27"></script>
+  <script defer src="famous.js?v=27"></script>
+  <script defer src="wide.js?v=27"></script>
+  <script defer src="apply.js?v=27"></script>
+  <script defer src="extend.js?v=27"></script>
+  <script defer src="mix.js?v=27"></script>
+  <script defer src="script.js?v=27"></script>
 </body>
 </html>

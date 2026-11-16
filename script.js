@@ -4,12 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const RL = window.TrianRelation;
   const FM = window.TrianFamous;
   const WD = window.TrianWide;
+  const MX = window.TrianMix;
   // 0° ≦ θ ≦ 180° の問題（wide.js）
   const WIDE_KINDS = ['wideVal', 'wideComp', 'eq', 'slope', 'rel2', 'expr2'];
   const isApply = cat => cat.indexOf('apply') === 0;
 
   // --- State ---
   let currentCategory = 'three';
+  let activeCategory = 'three'; // 総合ミックスのときは，いま出している問題の種類
   let currentGameMode = 'practice';
   let currentProblem = null;
   let isGameOver = false;
@@ -841,8 +843,41 @@ document.addEventListener('DOMContentLoaded', () => {
     expr2: { name: '⑯ 式の値（180° − θ）', label: '🧮 式の値#02' },
     applyLen: { name: '④ 長さを求める', label: '📐 活用：長さ' },
     applyAng: { name: '⑤ 角度を求める', label: '🧭 活用：角度' },
-    applyMix: { name: '⑥ 活用ミックス', label: '🎯 活用ミックス' }
+    applyMix: { name: '⑥ 活用ミックス', label: '🎯 活用ミックス' },
+    allMix: { name: '⑰ 総合ミックス', label: '🌈 総合ミックス' }
   };
+
+  // 総合ミックスで出す単元．端末に覚えておく（全部はずすことはできない）
+  let mixUnits = MX.ALL_KEYS.slice();
+  try { mixUnits = MX.parseUnits(localStorage.getItem('trian.mixUnits')); } catch (e) { /* 使えなくても動く */ }
+  const CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯';
+  function refreshMixUnits() {
+    document.querySelectorAll('#mix-units .unit-chip').forEach(b => {
+      const on = mixUnits.indexOf(b.dataset.unit) >= 0;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    const desc = $('mix-desc');
+    if (mixUnits.length === MX.ALL_KEYS.length) { desc.textContent = '①〜⑯ の問題の種類がランダムに出題される'; return; }
+    // 選んだ単元の番号（CAT の名前の先頭の丸数字）を番号順に並べる
+    const nums = [].concat(...MX.UNITS.filter(u => mixUnits.indexOf(u.key) >= 0).map(u => u.cats))
+      .map(c => CAT[c].name.charAt(0)).sort((a, b) => CIRCLED.indexOf(a) - CIRCLED.indexOf(b));
+    desc.textContent = `${nums.join('')} の問題の種類がランダムに出題される`;
+  }
+  document.querySelectorAll('#mix-units .unit-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const k = btn.dataset.unit;
+      const i = mixUnits.indexOf(k);
+      if (i >= 0) {
+        if (mixUnits.length === 1) { showFeedback('単元は1つ以上選んでください．', 'info'); return; }
+        mixUnits.splice(i, 1);
+      } else {
+        mixUnits = MX.ALL_KEYS.filter(x => x === k || mixUnits.indexOf(x) >= 0);
+      }
+      try { localStorage.setItem('trian.mixUnits', mixUnits.join(',')); } catch (e) { /* 無視 */ }
+      refreshMixUnits();
+    });
+  });
   const MODE = {
     practice: { name: '練習モード', desc: '時間制限はありません．間違えたら「解説を見る」で確認できます．連続正解記録を伸ばしましょう．' },
     timeAttack: { name: 'タイムアタック', desc: `${TA_GOAL}問正解するまでのタイムを測ります．間違えるとペナルティ（+5秒）が加算されます．` },
@@ -870,6 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('intro-mode-name').textContent = MODE[currentGameMode].name;
     $('intro-mode-desc').textContent = MODE[currentGameMode].desc;
     refreshOrientToggle();
+    refreshMixUnits();
     show(introScreen, MODE[currentGameMode].name);
   }
 
@@ -890,6 +926,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Game session ---
   function initGameSession() {
     resetGameTimers();
+    // 総合ミックスは直前の種類を覚えたまま（やり直してすぐ同じ種類にならないように）
+    if (currentCategory !== 'allMix') activeCategory = currentCategory;
     gameView.classList.remove('hidden');
     resultView.classList.add('hidden');
     if (currentGameMode === 'practice') {
@@ -926,7 +964,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateStatsUI() {
-    statsLeft.textContent = CAT[currentCategory].label;
+    statsLeft.textContent = currentCategory === 'allMix'
+      ? `🌈 ${CAT[activeCategory].name}`
+      : CAT[currentCategory].label;
     const em = (v, c) => `<span style="color:var(${c}); font-weight:800;">${v}</span>`;
     if (currentGameMode === 'practice') {
       statsRight.innerHTML = `連続正解: ${em(practiceStreak, '--theme-primary')}`;
@@ -945,10 +985,15 @@ document.addEventListener('DOMContentLoaded', () => {
     isLocked = false;
     lastWrongKey = null;
     judgeBtn.disabled = false;
+    // 総合ミックス：単元を選び，その中の種類を選ぶ（直前と同じ種類は続けない）
+    const cat = currentCategory === 'allMix' ? MX.pickCategory(mixUnits, activeCategory) : currentCategory;
+    if (cat !== activeCategory) currentProblem = null; // ちがう種類になったら直前との重なりは見ない
+    activeCategory = cat;
+    updateStatsUI();
     let prob;
-    if (isApply(currentCategory)) {
+    if (isApply(cat)) {
       // 三角比の活用：文章だけ出し，図はボタンで
-      do { prob = AP.generateApply(currentCategory); }
+      do { prob = AP.generateApply(cat); }
       while (currentProblem && currentProblem.text === prob.text);
       currentProblem = prob;
       problemPrompt.innerHTML = richText(prob.text);
@@ -958,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showFigureBtn.textContent = '📐 図を見る';
       showFigureBtn.classList.remove('hidden');
       answerList.innerHTML = numRowHTML(prob.answer);
-    } else if (currentCategory === 'relation') {
+    } else if (cat === 'relation') {
       // 三角比の相互関係：1つの値から残りの2つ．直角三角形はヒントとしてボタンで出す
       do { prob = RL.generateRelation(); }
       while (currentProblem && currentProblem.kind === 'relation' && currentProblem.given === prob.given && currentProblem.givenTex === prob.givenTex);
@@ -971,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showFigureBtn.textContent = '📐 直角三角形で考える';
       showFigureBtn.classList.remove('hidden');
       answerList.innerHTML = prob.asks.map(k => ratioRowHTML(RATIO_ROWS.find(r => r.key === k))).join('');
-    } else if (currentCategory === 'famous') {
+    } else if (cat === 'famous') {
       // 30°・45°・60°：値を答える／値から角を答える
       do { prob = FM.generateFamous(); }
       while (currentProblem && currentProblem.kind === 'famous' && currentProblem.sub === prob.sub && currentProblem.deg === prob.deg && currentProblem.fn === prob.fn);
@@ -989,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showFigureBtn.classList.add('hidden');
         answerList.innerHTML = numRowHTML({ kind: 'angle', mode: 'exact', label: T('\\theta =') });
       }
-    } else if (currentCategory === 'comp') {
+    } else if (cat === 'comp') {
       // 45° 以下の角の三角比で表す
       do { prob = FM.generateComp(); }
       while (currentProblem && currentProblem.kind === 'comp' && currentProblem.fn === prob.fn && currentProblem.deg === prob.deg);
@@ -1000,9 +1045,9 @@ document.addEventListener('DOMContentLoaded', () => {
       figure.classList.add('hidden');
       showFigureBtn.classList.add('hidden');
       answerList.innerHTML = compRowHTML(prob);
-    } else if (WIDE_KINDS.indexOf(currentCategory) >= 0) {
+    } else if (WIDE_KINDS.indexOf(cat) >= 0) {
       // 0° ≦ θ ≦ 180°（三角比の拡張・三角方程式・直線の傾き・相互関係#02）
-      const gen = { wideVal: WD.generateVal, wideComp: WD.generateComp, eq: WD.generateEq, slope: WD.generateSlope, rel2: WD.generateRel2, expr2: WD.generateExpr2 }[currentCategory];
+      const gen = { wideVal: WD.generateVal, wideComp: WD.generateComp, eq: WD.generateEq, slope: WD.generateSlope, rel2: WD.generateRel2, expr2: WD.generateExpr2 }[cat];
       const key = q => JSON.stringify([q.fn, q.deg, q.eqTex, q.lineTex, q.sub, q.given, q.givenTex, q.obtuse, q.tex]);
       do { prob = gen(); }
       while (currentProblem && currentProblem.kind === prob.kind && key(currentProblem) === key(prob));
@@ -1037,7 +1082,7 @@ document.addEventListener('DOMContentLoaded', () => {
         problemPrompt.innerHTML = `次の式の値を求めなさい．<div class="math-line expr-line">${D(prob.tex)}</div>`;
         answerList.innerHTML = ratioRowHTML({ key: 'value', tex: '\\text{値} =', neg: true });
       }
-    } else if (currentCategory === 'expr') {
+    } else if (cat === 'expr') {
       // 余角の関係を使って式の値を求める
       do { prob = FM.generateExpr(); }
       while (currentProblem && currentProblem.kind === 'expr' && currentProblem.tex === prob.tex);
@@ -1050,7 +1095,7 @@ document.addEventListener('DOMContentLoaded', () => {
       answerList.innerHTML = ratioRowHTML({ key: 'value', tex: '\\text{値} =' });
     } else {
       // 直前と同じ三角形が続かないように
-      do { prob = C.generateProblem(currentCategory, Math.random, { fixed: fixedOrient }); }
+      do { prob = C.generateProblem(cat, Math.random, { fixed: fixedOrient }); }
       while (currentProblem && prob.opp2 === currentProblem.opp2 && prob.adj2 === currentProblem.adj2);
       currentProblem = prob;
       problemPrompt.classList.remove('prompt-long');
