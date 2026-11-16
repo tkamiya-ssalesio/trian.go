@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <!-- canvas-confetti for effects -->
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=26">
+  <link rel="stylesheet" href="styles.css?v=28">
 </head>
 <body>
 
@@ -47,8 +47,15 @@
               <p>ゲームモードを選び，問題を選んでスタート</p>
             </div>
           </button>
+          <button class="menu-btn" id="go-to-records-btn">
+            <span class="icon">📊</span>
+            <div class="btn-text">
+              <h3>記録と苦手を見る</h3>
+              <p>自己ベストと，苦手な問題だけを集めた練習</p>
+            </div>
+          </button>
         </div>
-        <div class="app-footer">v1.4.0 | Produced by T.Kamiya</div>
+        <div class="app-footer">v1.5.0 | Produced by T.Kamiya</div>
       </div>
 
       <!-- 2. Tutorial Select Screen -->
@@ -125,6 +132,14 @@
           <div class="slide-indicator" id="slide-indicator">1 / 3</div>
           <button class="primary-btn" id="tutorial-next-btn">次へ ▶</button>
         </div>
+      </div>
+
+      <!-- 記録と苦手（自己ベスト・苦手の集計．端末の中に保存） -->
+      <div id="records-screen" class="hidden">
+        <h2 class="screen-title">記録と苦手</h2>
+        <div id="records-content"></div>
+        <p class="records-note">記録はこの端末のこのブラウザの中に保存されます．ほかの端末やブラウザには引き継がれません．</p>
+        <button class="link-btn hidden" id="clear-records-btn">🗑 記録と集計をすべて消す</button>
       </div>
 
       <!-- 5. Game Mode Select Screen -->
@@ -365,12 +380,14 @@
 
   <div class="feedback" id="feedback-toast"></div>
 
-  <script defer src="core.js?v=26"></script>
-  <script defer src="relation.js?v=26"></script>
-  <script defer src="famous.js?v=26"></script>
-  <script defer src="wide.js?v=26"></script>
-  <script defer src="apply.js?v=26"></script>
-  <script defer src="extend.js?v=26"></script>
-  <script defer src="script.js?v=26"></script>
+  <script defer src="core.js?v=28"></script>
+  <script defer src="relation.js?v=28"></script>
+  <script defer src="famous.js?v=28"></script>
+  <script defer src="wide.js?v=28"></script>
+  <script defer src="apply.js?v=28"></script>
+  <script defer src="extend.js?v=28"></script>
+  <script defer src="records.js?v=28"></script>
+  <script defer src="stats.js?v=28"></script>
+  <script defer src="script.js?v=28"></script>
 </body>
 </html>

@@ -4,12 +4,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const RL = window.TrianRelation;
   const FM = window.TrianFamous;
   const WD = window.TrianWide;
+  const REC = window.TrianRecords;
+  const ST = window.TrianStats;
   // 0° ≦ θ ≦ 180° の問題（wide.js）
   const WIDE_KINDS = ['wideVal', 'wideComp', 'eq', 'slope', 'rel2', 'expr2'];
   const isApply = cat => cat.indexOf('apply') === 0;
 
   // --- State ---
   let currentCategory = 'three';
+  let playCategory = 'three'; // いま出している問題の種類（「苦手をまとめて」では1問ごとに変わる）
+  let firstJudge = true;      // この問題の最初の判定か（苦手の集計は最初の判定だけ数える）
+  let fromRecords = false;    // 「記録と苦手」の画面から始めた練習か（戻る先を変える）
+  let weakSession = [];       // 「苦手をまとめて」を始めたときの苦手（途中で全部克服しても続けられるように）
   let currentGameMode = 'practice';
   let currentProblem = null;
   let isGameOver = false;
@@ -34,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const appHeader = $('app-header');
   const backBtn = $('back-btn');
   const headerTitle = $('header-title');
-  const screens = ['title-screen', 'tutorial-select-screen', 'tutorial-screen', 'mode-select-screen', 'intro-screen', 'problem-area'].map($);
-  const [titleScreen, tutorialSelectScreen, tutorialScreen, modeSelectScreen, introScreen, problemArea] = screens;
+  const screens = ['title-screen', 'tutorial-select-screen', 'tutorial-screen', 'mode-select-screen', 'intro-screen', 'problem-area', 'records-screen'].map($);
+  const [titleScreen, tutorialSelectScreen, tutorialScreen, modeSelectScreen, introScreen, problemArea, recordsScreen] = screens;
 
   const tutorialTitle = $('tutorial-title');
   const tutorialContent = $('tutorial-content');
@@ -378,12 +384,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('go-to-tutorial-btn').addEventListener('click', () => show(tutorialSelectScreen, 'やり方を学ぶ'));
   $('go-to-training-btn').addEventListener('click', () => show(modeSelectScreen, 'ゲームモード選択'));
+  $('go-to-records-btn').addEventListener('click', () => showRecords());
 
   backBtn.addEventListener('click', () => {
     resetGameTimers();
     if (!tutorialScreen.classList.contains('hidden')) show(tutorialSelectScreen, 'やり方を学ぶ');
     else if (!introScreen.classList.contains('hidden')) show(modeSelectScreen, 'ゲームモード選択');
-    else if (!problemArea.classList.contains('hidden')) showIntro();
+    else if (!problemArea.classList.contains('hidden')) { if (fromRecords) showRecords(); else showIntro(); }
     else show(titleScreen);
   });
 
@@ -841,7 +848,8 @@ document.addEventListener('DOMContentLoaded', () => {
     expr2: { name: '⑯ 式の値（180° − θ）', label: '🧮 式の値#02' },
     applyLen: { name: '④ 長さを求める', label: '📐 活用：長さ' },
     applyAng: { name: '⑤ 角度を求める', label: '🧭 活用：角度' },
-    applyMix: { name: '⑥ 活用ミックス', label: '🎯 活用ミックス' }
+    applyMix: { name: '⑥ 活用ミックス', label: '🎯 活用ミックス' },
+    weak: { name: '苦手をまとめて', label: '🎯 苦手' }
   };
   const MODE = {
     practice: { name: '練習モード', desc: '時間制限はありません．間違えたら「解説を見る」で確認できます．連続正解記録を伸ばしましょう．' },
@@ -861,6 +869,7 @@ document.addEventListener('DOMContentLoaded', () => {
       fixedOrient = btn.dataset.fixed === '1';
       try { localStorage.setItem('trian.fixedOrient', fixedOrient ? '1' : '0'); } catch (e) { /* 無視 */ }
       refreshOrientToggle();
+      refreshBestBadges();
     });
   });
 
@@ -870,8 +879,163 @@ document.addEventListener('DOMContentLoaded', () => {
     $('intro-mode-name').textContent = MODE[currentGameMode].name;
     $('intro-mode-desc').textContent = MODE[currentGameMode].desc;
     refreshOrientToggle();
+    refreshBestBadges();
     show(introScreen, MODE[currentGameMode].name);
   }
+
+  // --- 自己ベスト（records.js．端末の localStorage に持つ．使えない端末でも，開いている間は覚えておく） ---
+  let recordStore = null;
+  try { recordStore = window.localStorage; } catch (e) { /* 使えなくても動く */ }
+  let records = REC.load(recordStore);
+  const ORIENT_NAME = { 0: '向き：毎回変わる', 1: '向き：いつも同じ' };
+
+  // 問題を選ぶ画面：いまのモード（と向きの設定）でのベストを，ボタンに添える
+  function refreshBestBadges() {
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      const box = btn.querySelector('.btn-text');
+      let badge = box.querySelector('.cat-best');
+      const b = REC.isRecorded(currentGameMode) ? REC.get(records, currentGameMode, btn.dataset.category, fixedOrient) : null;
+      if (!b) { if (badge) badge.remove(); return; }
+      if (!badge) { badge = document.createElement('p'); badge.className = 'cat-best'; box.appendChild(badge); }
+      badge.textContent = `🏅 自己ベスト ${REC.format(currentGameMode, b.best.v)}`;
+    });
+  }
+
+  // 終わったプレイを記録し，結果画面に出す1行を返す
+  function recordResult(mode, value, extra) {
+    if (mode !== 'timeAttack' && value === 0) { // 0 問・0 点は記録に残さない（ベストがあれば見せるだけ）
+      const b = REC.get(records, mode, currentCategory, fixedOrient);
+      return b ? `<div class="result-best">🏅 自己ベスト：${REC.format(mode, b.best.v)}</div>` : '';
+    }
+    const fresh = REC.load(recordStore); // ほかのタブで増えた記録を消さない
+    if (Object.keys(fresh).length) records = fresh;
+    const r = REC.add(records, mode, currentCategory, fixedOrient, value, extra, Date.now());
+    if (!r.recorded) return '';
+    records = r.data;
+    REC.save(recordStore, records);
+    if (r.isFirst) return `<div class="result-best">📝 はじめての記録です．次はこの記録を超えよう！</div>`;
+    if (r.isBest) return `<div class="result-best is-new">🎉 自己ベスト更新！（これまでは ${REC.format(mode, r.prevBest)}）</div>`;
+    if (value === r.best) return `<div class="result-best">🏅 自己ベストと同じ記録！（${REC.format(mode, r.best)}）</div>`;
+    return `<div class="result-best">🏅 自己ベスト：${REC.format(mode, r.best)}（あと ${REC.gapText(mode, value, r.best)}）</div>`;
+  }
+
+  // --- 苦手（stats.js．問題の種類ごとに，最初の判定で正解できたかを数える） ---
+  let stats = ST.load(recordStore);
+  // 集計する種類：ミックスは中身の種類（①か②，④か⑤）に分けて数える
+  const TOPICS = Array.from(document.querySelectorAll('.category-btn')).map(b => b.dataset.category).filter(c => c !== 'mix' && c !== 'applyMix');
+
+  function topicOf(prob) {
+    if (prob.kind === 'apply') return prob.answer.kind === 'length' ? 'applyLen' : 'applyAng';
+    if (playCategory === 'three' || playCategory === 'two' || playCategory === 'mix') return prob.hidden ? 'two' : 'three';
+    return playCategory;
+  }
+
+  // 最初の判定を集計に足す．苦手を克服したら，正解の表示に添える文を返す
+  function logFirstJudge(results) {
+    const outcome = results.every(r => r.status === 'correct') ? 'c' : results.some(r => r.status !== 'correct' && r.status !== 'form') ? 'w' : 'f';
+    const hints = results.filter(r => r.status !== 'correct' && r.hint).map(r => r.hint);
+    const fresh = ST.load(recordStore); // ほかのタブで増えた分を消さない
+    if (Object.keys(fresh).length) stats = fresh;
+    const r = ST.log(stats, topicOf(currentProblem), outcome, hints);
+    if (!r.logged) return '';
+    stats = r.data;
+    ST.save(recordStore, stats);
+    if (!r.overcame) return '';
+    const left = ST.weakTopics(stats, TOPICS).length;
+    return `🎉 苦手を克服：${CAT[r.view.topic].name}！` + (left ? '' : '苦手はすべてなくなりました．');
+  }
+
+  // 「苦手をまとめて」で次に出す種類．正解率が低いほど出やすい
+  function nextWeakTopic() {
+    let pool = ST.weakTopics(stats, TOPICS);
+    if (!pool.length) pool = ST.summary(stats, weakSession); // 全部克服したあとも，始めたときの種類で続ける
+    return ST.pick(pool, Math.random, playCategory) || weakSession[0] || 'three';
+  }
+
+  function startPractice(category) {
+    currentGameMode = 'practice';
+    currentCategory = category;
+    fromRecords = true;
+    if (category === 'weak') weakSession = ST.weakTopics(stats, TOPICS).map(v => v.topic);
+    show(problemArea, category === 'weak' ? '苦手を練習中' : 'トレーニング中', '◀ やめる');
+    initGameSession();
+  }
+
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const meter = v => `<span class="rec-meter" aria-hidden="true"><span style="width:${Math.round(v.rate * 100)}%"></span></span>`;
+
+  function weakHTML() {
+    const all = ST.summary(stats, TOPICS);
+    const weak = ST.weakTopics(stats, TOPICS);
+    let html = '<section class="rec-section"><h3>苦手なところ</h3>';
+    if (!all.length) {
+      html += `<p class="records-empty">まだデータがありません．問題を解くと，最初の判定で正解できたかを問題の種類ごとに数えます（どのモードでも数えます）．</p>`;
+    } else if (!weak.length) {
+      html += all.some(v => v.judged)
+        ? '<p class="weak-none">👍 いまのところ，苦手な問題は見つかっていません．</p>'
+        : `<p class="weak-none">同じ種類の問題を ${ST.MIN_TRIES} 問解くと，苦手かどうかを判定します．</p>`;
+    } else {
+      html += `<p class="records-note">直近 ${ST.WINDOW} 問のうち，最初の判定で正解できた数です．${ST.WINDOW} 問中 ${Math.round(ST.CLEAR_AT * ST.WINDOW)} 問以上になると克服です．</p>`;
+      weak.forEach(v => {
+        const trend = v.mostlyForm ? '値は合っているのに，答えの形（約分・√ の整理など）で △ になることが多い' : '考え方や計算の間違い（✕）が多い';
+        const hints = v.hints.length ? `<ul class="weak-hints">${v.hints.map(h => `<li>${esc(h)}</li>`).join('')}</ul>` : '';
+        html += `<div class="weak-card">
+          <div class="weak-head"><b>${CAT[v.topic].name}</b><span class="weak-rate">${v.recentN} 問中 ${v.ok} 問</span></div>
+          ${meter(v)}
+          <p class="weak-trend">${trend}</p>
+          ${hints ? '<p class="weak-hint-title">最近もらった案内</p>' + hints : ''}
+          <button class="secondary-btn" data-practice="${v.topic}">この問題を練習する</button>
+        </div>`;
+      });
+      html += `<button class="primary-btn" data-practice="weak">🎯 苦手をまとめて練習する</button>`;
+    }
+    if (all.length) {
+      html += `<details class="rec-details"><summary>すべての問題の正解のようす</summary><table class="rec-table"><thead><tr><th>問題</th><th>直近の正解</th><th>解いた数</th></tr></thead><tbody>`
+        + all.map(v => `<tr><th>${CAT[v.topic].name}${v.weak ? '<span class="rec-sub weak-tag">苦手</span>' : ''}</th><td class="rec-best">${v.recentN} 問中 ${v.ok} 問${meter(v)}</td><td class="rec-meta">${v.n} 問</td></tr>`).join('')
+        + '</tbody></table></details>';
+    }
+    return html + '</section>';
+  }
+
+  function showRecords() {
+    resetGameTimers();
+    records = REC.load(recordStore);
+    stats = ST.load(recordStore);
+    const day = at => { const d = new Date(at); return isNaN(d) ? '' : `${d.getMonth() + 1}/${d.getDate()}`; };
+    const cats = Array.from(document.querySelectorAll('.category-btn')).map(b => b.dataset.category);
+    let html = '';
+    Object.keys(REC.MODES).forEach(mode => {
+      let rows = '';
+      cats.forEach(cat => {
+        (REC.usesOrient(cat) ? [false, true] : [false]).forEach(fixed => {
+          const b = REC.get(records, mode, cat, fixed);
+          if (!b) return;
+          const sub = REC.usesOrient(cat) ? `<span class="rec-sub">${ORIENT_NAME[fixed ? 1 : 0]}</span>` : '';
+          const combo = (mode === 'scoreAttack' && typeof b.best.combo === 'number') ? `<span class="rec-sub">最大 ${b.best.combo} コンボ</span>` : '';
+          rows += `<tr><th>${CAT[cat].name}${sub}</th><td class="rec-best">${REC.format(mode, b.best.v)}${combo}</td><td class="rec-meta">${day(b.best.at)}<span class="rec-sub">${b.plays} 回</span></td></tr>`;
+        });
+      });
+      if (rows) html += `<section class="rec-section"><h3>自己ベスト：${MODE[mode].name}</h3><table class="rec-table"><thead><tr><th>問題</th><th>自己ベスト</th><th>出した日</th></tr></thead><tbody>${rows}</tbody></table></section>`;
+    });
+    const none = !html && !Object.keys(stats).length;
+    $('records-content').innerHTML = weakHTML() + (html || '<section class="rec-section"><h3>自己ベスト</h3><p class="records-empty">まだ記録がありません．タイムアタック・サバイバル・スコアアタックを最後までプレイすると，ここに自己ベストが残ります．</p></section>');
+    $('clear-records-btn').classList.toggle('hidden', none);
+    show(recordsScreen, '記録と苦手');
+  }
+
+  $('records-content').addEventListener('click', e => {
+    const btn = e.target.closest('[data-practice]');
+    if (btn) startPractice(btn.dataset.practice);
+  });
+
+  $('clear-records-btn').addEventListener('click', () => {
+    if (!window.confirm('この端末に保存した自己ベストと苦手の集計をすべて消します．元に戻せません．消しますか？')) return;
+    REC.clear(recordStore);
+    ST.clear(recordStore);
+    records = {};
+    stats = {};
+    showRecords();
+  });
 
   document.querySelectorAll('.game-mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -882,6 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.category-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       currentCategory = btn.dataset.category;
+      fromRecords = false;
       show(problemArea, 'トレーニング中', '◀ やめる');
       initGameSession();
     });
@@ -926,9 +1091,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateStatsUI() {
-    statsLeft.textContent = CAT[currentCategory].label;
+    statsLeft.textContent = currentCategory === 'weak' ? `🎯 苦手：${CAT[playCategory].name}` : CAT[currentCategory].label;
     const em = (v, c) => `<span style="color:var(${c}); font-weight:800;">${v}</span>`;
-    if (currentGameMode === 'practice') {
+    if (currentCategory === 'weak') {
+      // 克服までの進み具合（直近10問で8問以上）
+      const t = ST.summary(stats, [playCategory])[0];
+      statsRight.innerHTML = t ? `直近${t.recentN}問で ${em(t.ok, '--theme-primary')} 問正解` : '';
+    } else if (currentGameMode === 'practice') {
       statsRight.innerHTML = `連続正解: ${em(practiceStreak, '--theme-primary')}`;
     } else if (currentGameMode === 'timeAttack') {
       const elapsed = ((Date.now() - taStartTime) / 1000).toFixed(1);
@@ -945,10 +1114,12 @@ document.addEventListener('DOMContentLoaded', () => {
     isLocked = false;
     lastWrongKey = null;
     judgeBtn.disabled = false;
+    firstJudge = true;
+    playCategory = currentCategory === 'weak' ? nextWeakTopic() : currentCategory;
     let prob;
-    if (isApply(currentCategory)) {
+    if (isApply(playCategory)) {
       // 三角比の活用：文章だけ出し，図はボタンで
-      do { prob = AP.generateApply(currentCategory); }
+      do { prob = AP.generateApply(playCategory); }
       while (currentProblem && currentProblem.text === prob.text);
       currentProblem = prob;
       problemPrompt.innerHTML = richText(prob.text);
@@ -958,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showFigureBtn.textContent = '📐 図を見る';
       showFigureBtn.classList.remove('hidden');
       answerList.innerHTML = numRowHTML(prob.answer);
-    } else if (currentCategory === 'relation') {
+    } else if (playCategory === 'relation') {
       // 三角比の相互関係：1つの値から残りの2つ．直角三角形はヒントとしてボタンで出す
       do { prob = RL.generateRelation(); }
       while (currentProblem && currentProblem.kind === 'relation' && currentProblem.given === prob.given && currentProblem.givenTex === prob.givenTex);
@@ -971,7 +1142,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showFigureBtn.textContent = '📐 直角三角形で考える';
       showFigureBtn.classList.remove('hidden');
       answerList.innerHTML = prob.asks.map(k => ratioRowHTML(RATIO_ROWS.find(r => r.key === k))).join('');
-    } else if (currentCategory === 'famous') {
+    } else if (playCategory === 'famous') {
       // 30°・45°・60°：値を答える／値から角を答える
       do { prob = FM.generateFamous(); }
       while (currentProblem && currentProblem.kind === 'famous' && currentProblem.sub === prob.sub && currentProblem.deg === prob.deg && currentProblem.fn === prob.fn);
@@ -989,7 +1160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showFigureBtn.classList.add('hidden');
         answerList.innerHTML = numRowHTML({ kind: 'angle', mode: 'exact', label: T('\\theta =') });
       }
-    } else if (currentCategory === 'comp') {
+    } else if (playCategory === 'comp') {
       // 45° 以下の角の三角比で表す
       do { prob = FM.generateComp(); }
       while (currentProblem && currentProblem.kind === 'comp' && currentProblem.fn === prob.fn && currentProblem.deg === prob.deg);
@@ -1000,9 +1171,9 @@ document.addEventListener('DOMContentLoaded', () => {
       figure.classList.add('hidden');
       showFigureBtn.classList.add('hidden');
       answerList.innerHTML = compRowHTML(prob);
-    } else if (WIDE_KINDS.indexOf(currentCategory) >= 0) {
+    } else if (WIDE_KINDS.indexOf(playCategory) >= 0) {
       // 0° ≦ θ ≦ 180°（三角比の拡張・三角方程式・直線の傾き・相互関係#02）
-      const gen = { wideVal: WD.generateVal, wideComp: WD.generateComp, eq: WD.generateEq, slope: WD.generateSlope, rel2: WD.generateRel2, expr2: WD.generateExpr2 }[currentCategory];
+      const gen = { wideVal: WD.generateVal, wideComp: WD.generateComp, eq: WD.generateEq, slope: WD.generateSlope, rel2: WD.generateRel2, expr2: WD.generateExpr2 }[playCategory];
       const key = q => JSON.stringify([q.fn, q.deg, q.eqTex, q.lineTex, q.sub, q.given, q.givenTex, q.obtuse, q.tex]);
       do { prob = gen(); }
       while (currentProblem && currentProblem.kind === prob.kind && key(currentProblem) === key(prob));
@@ -1037,7 +1208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         problemPrompt.innerHTML = `次の式の値を求めなさい．<div class="math-line expr-line">${D(prob.tex)}</div>`;
         answerList.innerHTML = ratioRowHTML({ key: 'value', tex: '\\text{値} =', neg: true });
       }
-    } else if (currentCategory === 'expr') {
+    } else if (playCategory === 'expr') {
       // 余角の関係を使って式の値を求める
       do { prob = FM.generateExpr(); }
       while (currentProblem && currentProblem.kind === 'expr' && currentProblem.tex === prob.tex);
@@ -1050,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', () => {
       answerList.innerHTML = ratioRowHTML({ key: 'value', tex: '\\text{値} =' });
     } else {
       // 直前と同じ三角形が続かないように
-      do { prob = C.generateProblem(currentCategory, Math.random, { fixed: fixedOrient }); }
+      do { prob = C.generateProblem(playCategory, Math.random, { fixed: fixedOrient }); }
       while (currentProblem && prob.opp2 === currentProblem.opp2 && prob.adj2 === currentProblem.adj2);
       currentProblem = prob;
       problemPrompt.classList.remove('prompt-long');
@@ -1073,6 +1244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showExplainBtn.classList.add('hidden');
     nextBtn.classList.add('hidden');
     judgeBtn.classList.remove('hidden');
+    updateStatsUI();
   }
 
   showFigureBtn.addEventListener('click', () => {
@@ -1140,8 +1312,11 @@ document.addEventListener('DOMContentLoaded', () => {
       else { row.classList.add('is-wrong'); row.querySelector('.ans-mark').textContent = '✕'; if (!wrongHint && r.hint) wrongHint = r.hint; }
     });
 
+    let overcameNote = '';
+    if (firstJudge) { firstJudge = false; overcameNote = logFirstJudge(results); }
+
     if (results.every(r => r.status === 'correct')) {
-      const note = (results.find(r => r.note) || {}).note;
+      const note = [(results.find(r => r.note) || {}).note, overcameNote].filter(Boolean).join(' ');
       handleSuccess(note);
       return;
     }
@@ -1298,15 +1473,16 @@ document.addEventListener('DOMContentLoaded', () => {
     resetGameTimers();
     isGameOver = true;
     judgeBtn.disabled = true;
-    let title = 'ゲーム終了！', detail = '';
-    if (mode === 'timeAttack') { title = '🏆 タイムアタック クリア！'; detail = `${TA_GOAL}問クリアタイム：${elapsed} 秒`; }
-    else if (mode === 'survival') { title = '💀 ゲームオーバー'; detail = `記録：${practiceStreak} 問正解`; }
-    else if (mode === 'scoreAttack') { title = '⏰ タイムアップ！'; detail = `最終スコア：${saScore} 点（最大コンボ：${saMaxCombo}）`; }
+    let title = 'ゲーム終了！', detail = '', best = '';
+    if (mode === 'timeAttack') { title = '🏆 タイムアタック クリア！'; detail = `${TA_GOAL}問クリアタイム：${elapsed} 秒`; best = recordResult(mode, Number(elapsed)); }
+    else if (mode === 'survival') { title = '💀 ゲームオーバー'; detail = `記録：${practiceStreak} 問正解`; best = recordResult(mode, practiceStreak); }
+    else if (mode === 'scoreAttack') { title = '⏰ タイムアップ！'; detail = `最終スコア：${saScore} 点（最大コンボ：${saMaxCombo}）`; best = recordResult(mode, saScore, { combo: saMaxCombo }); }
     gameView.classList.add('hidden');
     resultView.classList.remove('hidden');
     resultView.innerHTML = `
       <div class="result-title">${title}</div>
       <div class="result-subtitle">${detail}</div>
+      ${best}
       <button class="primary-btn" id="retry-btn">もう一度挑戦</button>
       <button class="secondary-btn" id="to-menu-btn">問題を選び直す</button>`;
     $('retry-btn').addEventListener('click', initGameSession);
