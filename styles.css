@@ -1218,3 +1218,35 @@ text.ex-neg { fill: var(--apple-red); }
   .ex-stage:has(#ex7-info) .ex-figure { max-width: min(100%, calc((100dvh - 460px) * var(--arw, 1.2))); }
 }
 .ex-axlab { font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-weight: 700; paint-order: stroke; stroke: #ffffff; stroke-width: 4px; stroke-linejoin: round; }
+
+/* --- 0° ≦ θ ≦ 180°（wide.js） --- */
+.neg-sign {
+  font-family: 'KaTeX_Main', 'Times New Roman', serif;
+  font-size: 24px;
+  margin-right: -6px;
+}
+.toggle-neg {
+  min-width: 36px;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+.ans-row-eq .val-deg { width: 64px; }
+.eq-more { display: inline-flex; align-items: center; gap: 8px; }
+.eq-more.hidden { display: none; }
+
+.figure.uc-figure { aspect-ratio: 360 / 230; }
+.uc-axis { stroke: #0f172a; stroke-width: 1.4; }
+.uc-arrow { fill: #0f172a; }
+.uc-circle { fill: none; stroke: #94a3b8; stroke-width: 1.6; }
+.uc-guide { stroke: var(--theme-primary); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.uc-radius { stroke: #0f172a; stroke-width: 3; stroke-linecap: round; }
+.uc-dot { fill: var(--theme-accent); }
+.uc-arc { fill: none; stroke: var(--theme-accent); stroke-width: 1.8; }
+.lbl.uc-lbl { font-size: 15px; color: var(--apple-text-secondary); }
+.lbl.uc-ang { color: var(--theme-accent); font-size: 14px; }
+.lbl.uc-pt { color: var(--apple-text-primary); }
+.lbl.uc-val { color: var(--theme-primary); font-size: 15px; font-weight: 700; }
+/* 解説スライドの小さい単位円では文字も小さく（弧にかからないように） */
+.figure-small.uc-figure .lbl.uc-val { font-size: 12px; }
+.figure-small.uc-figure .lbl.uc-lbl { font-size: 13px; }

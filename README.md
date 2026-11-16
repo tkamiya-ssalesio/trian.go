@@ -27,6 +27,18 @@
    sin 64° = cos 26°，tan 83° = 1/tan 7° のように書きかえます．sin・cos・tan・1/tan のボタンを選び，角度を入れます．そのまま書いたとき，sin を cos に変え忘れたとき，tan のままにしたときは案内を出します．
 10. **🧮 ⑩ 式の値**
    sin²40° + sin²50°，tan 35° tan 55° − tan 15° tan 75°，(sin 70° + sin 20°)² − 2 tan 70° cos²70°，cos²20° + cos²35° + cos²45° + cos²55° + cos²70° の4つの型で，角度を変えて出します．答えは整数か分数（0 や 5/2 もある）．
+11. **🌙 ⑪ 0°〜180° の三角比**（三角比の拡張）
+   sin 150°，cos 120°，tan 135° などの値．0°・90°・180° も出ます（tan 90° は出しません）．解説は単位円の上の点 P の座標と，180° − θ の三角比の2通り．
+12. **🔄 ⑫ 鈍角を 45° 以下の角で表す**
+   sin 156° = sin 24°，cos 93° = −sin 3°，tan 117° = −1/tan 27° のように書きかえます．「−」と sin・cos・tan・1/tan のボタン，角度で答えます．
+13. **🎯 ⑬ 三角方程式**
+   0° ≦ θ ≦ 180° で sin θ = 1/√2，2cos θ = −√3，√3 tan θ − 1 = 0 などを満たす θ を求めます．角度の欄は1つで，答えが2つあると思ったら「＋もう1つ」で欄を増やします．1つしか答えていないときは「ほかにもある」と案内します．
+14. **📈 ⑭ 直線の傾き**
+   直線 y = mx（+ b）と x 軸の正の向きとのなす角を求める問題と，角から傾きを求める問題が半々です．
+15. **🔗 ⑮ 1つから残りの2つ（0°〜180°）**
+   sin を与えるときは問題文で鋭角か鈍角かを指定し，cos・tan を与えるときは符号から判断させます．解説はプリントの流れ（cos θ < 0 であるから，など）です．
+16. **🧮 ⑯ 式の値（180° − θ）**
+   sin 80° cos 170° − cos 80° sin 170°，sin 20° + sin 70° + cos 110° + cos 160°，1/tan²50° − 1/cos²40° などの型で，角度を変えて出します．
 4. **📐 ④ 長さを求める（三角比の活用）**
    木の高さ（目の高さを足す）・影・見下ろした距離・坂・凧・はしご・エスカレーターなど．教科書の三角比の表を使って計算します．
 5. **🧭 ⑤ 角度を求める（三角比の活用）**
@@ -56,6 +68,7 @@
 * **三角比の相互関係**：3つの公式の導き方，sin（cos）がわかるとき・tan がわかるときの手順，直角三角形を使う別解．
 * **有名角・余角の三角比**：三角定規の辺の比と 30°・45°・60° の表，余角の公式（sin(90° − θ) = cos θ など）とその理由，45° 以下の角で表す・式の値の例と入力のしかた．
 * **三角比の拡張（0°〜180°）**：直角三角形の定義が 90° で使えなくなる様子 → 同じ三角形を座標平面に置く → 90° を超えても座標なら読める（r = 2，P(−1, √3)）→ 角ごとにバラバラだった半径（30° は r = 2，45° は r = √2）を r = 1 にそろえる（単位円）→ 単位円で P をドラッグして試す（有名角のボタン，直線 x = 1 の tan，180° − θ の点）→ まとめ → コラム「なぜ正弦とよぶの？」（弦の半分が sin θ．プトレマイオスの弦の表 → インドの jya → sinus → オイラーが半径を 1 に）．教科書（数研 NEXT数学Ⅰ p.153〜157）の流れに「なぜ座標か・なぜ単位円か」を足しています．授業での提示と，生徒の見直し・自習の両方に使えます．横長の画面（幅 900px 以上）では説明が左，図が右に並び，スクロールせずに1枚ずつ映せます．
+* **三角方程式・直線の傾き・相互関係（0°〜180°）**：単位円で解く三角方程式（sin は2つ，cos・tan は1つ），傾き = tan θ，鈍角のときの sin・cos・tan の符号と，sin だけでは鋭角か鈍角かが決まらないこと，「−」ボタンの使い方．
 * **三角比の活用**：仰角・俯角，どの三角比を使うか（正弦・余弦・正接），三角比の表の引き方と答え方．
 
 ### 🎮 4つのゲームモード
@@ -78,6 +91,8 @@ node tests/core.test.js
 node tests/apply.test.js
 node tests/relation.test.js
 node tests/famous.test.js
+node tests/extend.test.js
+node tests/wide.test.js
 ```
 プリントの解答例（三角比・三角比の活用），書き方のルール，約3億通りの入力パターンの総当たり（正解になるのは値が等しく最も簡単な形だけか），三角形とラベルの配置を検査します．
 
@@ -88,7 +103,7 @@ node tests/famous.test.js
 A gamified web training app for the introduction of trigonometric ratios (sine, cosine, tangent) in Japanese high school Math I. The name comes from how students read "triangle" in katakana.
 
 ## ✨ Features
-* **10 categories:** (1) all three sides given, (2) two sides given — find the third with the Pythagorean theorem first, (3) mixed; and applications with a trig table: (4) find a length (heights, slopes, angles of elevation and depression), (5) find an angle from a gradient or two sides, (6) mixed; and (7) trigonometric identities — given one of sin, cos, tan of an acute angle, find the other two; (8) sin, cos, tan of 30°, 45°, 60° and the reverse (find the acute angle); (9) rewrite with an angle of 45° or less using complementary angles (sin 64° = cos 26°, tan 83° = 1/tan 7°); (10) evaluate expressions using complementary angles.
+* **16 categories:** (1) all three sides given, (2) two sides given — find the third with the Pythagorean theorem first, (3) mixed; and applications with a trig table: (4) find a length (heights, slopes, angles of elevation and depression), (5) find an angle from a gradient or two sides, (6) mixed; and (7) trigonometric identities — given one of sin, cos, tan of an acute angle, find the other two; (8) sin, cos, tan of 30°, 45°, 60° and the reverse (find the acute angle); (9) rewrite with an angle of 45° or less using complementary angles (sin 64° = cos 26°, tan 83° = 1/tan 7°); (10) evaluate expressions using complementary angles; and for 0° ≤ θ ≤ 180°: (11) values at 0°–180°, (12) rewrite obtuse angles with an angle of 45° or less, (13) trigonometric equations, (14) slope of a line and its angle with the x-axis, (15) given one ratio, find the other two (with signs), (16) expressions using 180° − θ.
 * Application answers computed with the 4-digit table are accepted within ±1 in the last digit.
 * The angle θ and the right-angle mark are always shown, and the triangle is rotated or reflected at random every time.
 * Answers must be in simplest form (reduced fractions, simplified radicals). **Rationalizing the denominator is optional** — both 2/√5 and 2√5/5 are accepted.

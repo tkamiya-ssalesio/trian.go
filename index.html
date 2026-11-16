@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <!-- canvas-confetti for effects -->
   <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <link rel="stylesheet" href="styles.css?v=25">
+  <link rel="stylesheet" href="styles.css?v=26">
 </head>
 <body>
 
@@ -95,6 +95,13 @@
             <div class="btn-text">
               <h3>三角比の拡張（0°〜180°）</h3>
               <p>なぜ座標を使うのか，なぜ単位円なのかを動かして確かめる</p>
+            </div>
+          </button>
+          <button class="menu-btn tutorial-btn" data-tutorial="wide">
+            <span class="icon">🎯</span>
+            <div class="btn-text">
+              <h3>三角方程式・直線の傾き・相互関係（0°〜180°）</h3>
+              <p>単位円で解く三角方程式，傾きと tan θ，鈍角のときの符号</p>
             </div>
           </button>
           <button class="menu-btn tutorial-btn" data-tutorial="apply">
@@ -246,6 +253,57 @@
 
         <section class="cat-section">
           <div class="cat-head">
+            <h3>三角比の拡張（0° ≦ θ ≦ 180°）</h3>
+            <p class="cat-note">負の答えは「−」ボタンで入力します</p>
+          </div>
+          <div class="menu-buttons">
+            <button class="menu-btn category-btn" data-category="wideVal">
+              <span class="icon">🌙</span>
+              <div class="btn-text">
+                <h3>⑪ 0°〜180° の三角比</h3>
+                <p>sin150°，cos120°，tan135° など．0°・90°・180° も</p>
+              </div>
+            </button>
+            <button class="menu-btn category-btn" data-category="wideComp">
+              <span class="icon">🔄</span>
+              <div class="btn-text">
+                <h3>⑫ 鈍角を 45° 以下の角で表す</h3>
+                <p>sin156° = sin24°，tan117° = −1/tan27° のように書きかえる</p>
+              </div>
+            </button>
+            <button class="menu-btn category-btn" data-category="eq">
+              <span class="icon">🎯</span>
+              <div class="btn-text">
+                <h3>⑬ 三角方程式</h3>
+                <p>sinθ = 1/√2，2cosθ = −√3 などを満たす θ（答えが2つのことも）</p>
+              </div>
+            </button>
+            <button class="menu-btn category-btn" data-category="slope">
+              <span class="icon">📈</span>
+              <div class="btn-text">
+                <h3>⑭ 直線の傾き</h3>
+                <p>直線と x 軸の正の向きとのなす角 ⇔ 傾き</p>
+              </div>
+            </button>
+            <button class="menu-btn category-btn" data-category="rel2">
+              <span class="icon">🔗</span>
+              <div class="btn-text">
+                <h3>⑮ 1つから残りの2つ（0°〜180°）</h3>
+                <p>鈍角のときの符号に注意して，残りの2つを求める</p>
+              </div>
+            </button>
+            <button class="menu-btn category-btn" data-category="expr2">
+              <span class="icon">🧮</span>
+              <div class="btn-text">
+                <h3>⑯ 式の値（180° − θ）</h3>
+                <p>sin80°cos170° − cos80°sin170° などの値</p>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <section class="cat-section">
+          <div class="cat-head">
             <h3>三角比の活用</h3>
             <p class="cat-note">教科書の三角比の表を使って計算します</p>
           </div>
@@ -307,11 +365,12 @@
 
   <div class="feedback" id="feedback-toast"></div>
 
-  <script defer src="core.js?v=25"></script>
-  <script defer src="relation.js?v=25"></script>
-  <script defer src="famous.js?v=25"></script>
-  <script defer src="apply.js?v=25"></script>
-  <script defer src="extend.js?v=25"></script>
-  <script defer src="script.js?v=25"></script>
+  <script defer src="core.js?v=26"></script>
+  <script defer src="relation.js?v=26"></script>
+  <script defer src="famous.js?v=26"></script>
+  <script defer src="wide.js?v=26"></script>
+  <script defer src="apply.js?v=26"></script>
+  <script defer src="extend.js?v=26"></script>
+  <script defer src="script.js?v=26"></script>
 </body>
 </html>

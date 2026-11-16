@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const AP = window.TrianApply;
   const RL = window.TrianRelation;
   const FM = window.TrianFamous;
+  const WD = window.TrianWide;
+  // 0° ≦ θ ≦ 180° の問題（wide.js）
+  const WIDE_KINDS = ['wideVal', 'wideComp', 'eq', 'slope', 'rel2', 'expr2'];
   const isApply = cat => cat.indexOf('apply') === 0;
 
   // --- State ---
@@ -147,10 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function ratioRowHTML(row) {
     return `
-      <div class="ans-row" data-kind="ratio" data-key="${row.key}" data-num-root="0" data-frac="0" data-den-root="0">
+      <div class="ans-row" data-kind="ratio" data-key="${row.key}" data-num-root="0" data-frac="0" data-den-root="0" data-neg="0">
         <div class="ans-label">${T(row.tex)}</div>
         <div class="ans-body">
-          <div class="ans-value">
+          ${row.neg ? '<span class="neg-sign hidden">−</span>' : ''}<div class="ans-value">
             <div class="ans-part ans-num">
               ${inputHTML('a', ' ', 'coef')}
               <span class="rad hidden"><span class="rad-sign">√</span>${inputHTML('b')}</span>
@@ -162,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
           <div class="ans-toggles">
+            ${row.neg ? '<button type="button" class="toggle-btn toggle-neg" data-toggle="neg">−</button>' : ''}
             <button type="button" class="toggle-btn" data-toggle="frac">分数</button>
             <button type="button" class="toggle-btn" data-toggle="numRoot">√</button>
             <button type="button" class="toggle-btn hidden" data-toggle="denRoot">分母に√</button>
@@ -189,18 +193,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 45° 以下の角で表す：三角比を選び，角度を入れる欄（1/tan を選ぶと分数になる）
-  function compRowHTML(p) {
+  function compRowHTML(p, opts) {
+    const neg = opts && opts.neg;
     const pick = (f, label) => `<button type="button" class="toggle-btn" data-fnpick="${f}">${label}</button>`;
     return `
-      <div class="ans-row ans-row-comp" data-kind="comp" data-fn="">
+      <div class="ans-row ans-row-comp" data-kind="comp" data-fn="" data-neg="0">
         <div class="ans-label">${T(`\\${p.fn}\\,${p.deg}^\\circ =`)}</div>
         <div class="ans-body">
-          <div class="ans-value comp-value">
+          ${neg ? '<span class="neg-sign hidden">−</span>' : ''}<div class="ans-value comp-value">
             <div class="comp-one hidden">1</div>
             <div class="ans-line comp-line hidden"></div>
             <div class="comp-main"><span class="comp-fn">?</span><input type="text" inputmode="numeric" autocomplete="off" maxlength="3" class="val-input val-deg" data-role="deg"><span class="num-affix">°</span></div>
           </div>
-          <div class="ans-toggles comp-picks">${pick('sin', 'sin')}${pick('cos', 'cos')}${pick('tan', 'tan')}${pick('rtan', '1/tan')}</div>
+          <div class="ans-toggles comp-picks">${neg ? '<button type="button" class="toggle-btn toggle-neg" data-toggle="neg">−</button>' : ''}${pick('sin', 'sin')}${pick('cos', 'cos')}${pick('tan', 'tan')}${pick('rtan', '1/tan')}</div>
         </div>
         <div class="ans-mark"></div>
       </div>`;
@@ -213,6 +218,30 @@ document.addEventListener('DOMContentLoaded', () => {
     row.querySelector('.comp-line').classList.toggle('hidden', !rt);
     row.querySelector('.comp-fn').textContent = rt ? 'tan' : f;
     clearMark(row);
+  }
+
+  // 三角方程式：角度の欄．答えが2つあると思ったら「＋もう1つ」で欄を増やす
+  function eqRowHTML() {
+    const box = '<input type="text" inputmode="numeric" autocomplete="off" maxlength="3" class="val-input val-deg" data-role="deg">';
+    return `
+      <div class="ans-row ans-row-num ans-row-eq" data-kind="eq">
+        <div class="ans-label">${T('\\theta =')}</div>
+        <div class="ans-body">
+          <div class="ans-value num-value">
+            ${box}<span class="num-affix">°</span>
+            <span class="eq-more hidden"><span class="num-affix">，</span>${box}<span class="num-affix">°</span></span>
+          </div>
+          <div class="ans-toggles"><button type="button" class="toggle-btn" data-eqmore="1">＋もう1つ</button></div>
+        </div>
+        <div class="ans-mark"></div>
+      </div>`;
+  }
+
+  // 単位円（半円）の図．wide.js の semicircle が返す線と文字を描く
+  function unitFigureHTML(scene) {
+    const pos = p => `left:${(p[0] / scene.W * 100).toFixed(2)}%;top:${(p[1] / scene.H * 100).toFixed(2)}%`;
+    return `<svg viewBox="0 0 ${scene.W} ${scene.H}" aria-hidden="true">${scene.svg}</svg>` +
+      scene.labels.map(l => `<div class="lbl ${l.cls}" style="${pos(l.p)}">${T(l.tex)}</div>`).join('');
   }
 
   // 三角定規の図（30°・45°・60°）．角の大きさを θ の位置に書く
@@ -240,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setToggle(row, name, on) {
-    const attr = { frac: 'frac', numRoot: 'numRoot', denRoot: 'denRoot', root: 'root' }[name];
+    const attr = { frac: 'frac', numRoot: 'numRoot', denRoot: 'denRoot', root: 'root', neg: 'neg' }[name];
     row.dataset[attr] = on ? '1' : '0';
     const btn = row.querySelector(`[data-toggle="${name}"]`);
     if (btn) btn.classList.toggle('active', on);
@@ -249,6 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (name === 'denRoot') {
       setRootPart(row.querySelector('.ans-den'), on);
+    }
+    if (name === 'neg') {
+      const sign = row.querySelector('.neg-sign');
+      if (sign) sign.classList.toggle('hidden', !on);
     }
     if (name === 'frac') {
       row.querySelector('.ans-line').classList.toggle('hidden', !on);
@@ -280,6 +313,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = e.target.closest('.toggle-btn');
     if (!btn || isLocked) return;
     const row = btn.closest('.ans-row');
+    if (btn.dataset.eqmore) {
+      // 2つ目の欄を出す／しまう（しまうときは中身も消す）
+      const more = row.querySelector('.eq-more');
+      const open = more.classList.contains('hidden');
+      more.classList.toggle('hidden', !open);
+      btn.textContent = open ? '1つにもどす' : '＋もう1つ';
+      btn.classList.toggle('active', open);
+      const box = more.querySelector('.val-deg');
+      if (open) box.focus(); else box.value = '';
+      clearMark(row);
+      return;
+    }
     if (btn.dataset.fnpick) {
       setCompFn(row, btn.dataset.fnpick);
       const el = row.querySelector('.val-deg');
@@ -644,6 +689,52 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>`
       ]
     },
+    wide: {
+      title: '三角方程式・直線の傾き・相互関係（0°〜180°）',
+      slides: [
+        () => `
+          <div class="tutorial-slide">
+            <ul class="term-list">
+              <li><b>三角方程式（trigonometric equation）</b>：${T('\\sin\\theta = \\frac{1}{2}')} のように，θ の三角比を含み，特定の θ でだけ成り立つ等式．</li>
+              <li><b>解く（solve）</b>：等式を満たす θ を，決められた範囲の中からすべて求めること．</li>
+            </ul>
+            <p class="note">例：${T('0^\\circ \\leqq \\theta \\leqq 180^\\circ')} のとき ${T('\\sin\\theta = \\frac{1}{\\sqrt{2}}')}</p>
+            <div class="figure uc-figure figure-small">${unitFigureHTML(WD.semicircle({ pts: [45, 135], hline: { y: Math.SQRT1_2, tex: 'y = \\frac{1}{\\sqrt{2}}' } }))}</div>
+            <ul class="term-list">
+              <li>sin θ は単位円の上の点の <b>y 座標</b>．直線 ${T('y = \\frac{1}{\\sqrt{2}}')} と半円の交点は P，Q の<b>2つ</b>あるので，${T('\\theta = 45^\\circ,\\ 135^\\circ')}．</li>
+              <li><b>答えの個数は値によって変わる</b>ので，図で交点を数える．${T('\\sin\\theta = 1')} なら 90° の1つ．cos θ は <b>x 座標</b>なので，直線 ${T('x = a')} との交点は1つ．tan θ は<b>直線 OP の傾き</b>なので，ふつうは1つ（${T('\\tan\\theta = 0')} のときだけ 0° と 180° の2つ）．</li>
+              <li>${T('2\\sin\\theta = 1')} や ${T('\\sqrt{3}\\tan\\theta - 1 = 0')} は，まず ${T('\\sin\\theta = \\cdots')} の形に変形する．</li>
+            </ul>
+            <p class="note">答えが2つあると思ったら，欄の右の <span class="toggle-btn demo">＋もう1つ</span> で欄を増やします．</p>
+          </div>`,
+        () => `
+          <div class="tutorial-slide">
+            <p><b>直線の傾きと tan θ</b>：直線 ${T('y = mx')} と x 軸の正の向きとのなす角を θ とすると ${T('m = \\tan\\theta')}（${T('0^\\circ \\leqq \\theta < 180^\\circ')}，${T('\\theta \\neq 90^\\circ')}．x 軸に垂直な直線には傾きがない）．</p>
+            <div class="figure uc-figure figure-small">${unitFigureHTML(WD.semicircle({ pts: [150], line: { deg: 150 } }))}</div>
+            <ul class="term-list">
+              <li>${T('\\mathrm{P}(\\cos\\theta,\\ \\sin\\theta)')} なので，直線 OP の傾きは ${T('\\frac{\\sin\\theta}{\\cos\\theta} = \\tan\\theta')}．</li>
+              <li>傾きが正なら θ は鋭角，負なら θ は鈍角，0 なら ${T('\\theta = 0^\\circ')}．例：${T('y = -\\frac{1}{\\sqrt{3}}x')} は ${T('\\tan\\theta = -\\frac{1}{\\sqrt{3}}')} より ${T('\\theta = 150^\\circ')}．</li>
+              <li>${T('y = \\sqrt{3}x + 1')} のように y 切片があっても，直線は上下に平行移動するだけなので，角は変わらない．</li>
+            </ul>
+          </div>`,
+        () => `
+          <div class="tutorial-slide">
+            <p><b>0° ≦ θ ≦ 180° の相互関係</b>：3つの公式はそのまま使える（${T('\\tan\\theta')} を含む式は ${T('\\theta \\neq 90^\\circ')}）．違うのは<b>符号</b>だけ．</p>
+            <table class="rule-table mini-table">
+              <tr><th></th><th>鋭角</th><th>鈍角</th></tr>
+              <tr><td>${T('\\sin\\theta')}</td><td>＋</td><td>＋</td></tr>
+              <tr><td>${T('\\cos\\theta')}</td><td>＋</td><td>−</td></tr>
+              <tr><td>${T('\\tan\\theta')}</td><td>＋</td><td>−</td></tr>
+            </table>
+            <ul class="term-list">
+              <li><b>sin がわかるとき</b>：sin は鋭角でも鈍角でも正なので，θ が鋭角か鈍角かを決めないと cos の符号が決まらない（問題文で確かめる）．問題文に指定がないときは，鋭角と鈍角の2つの場合に分けて「または」で答える．</li>
+              <li><b>cos・tan がわかるとき</b>：その符号から，θ が鋭角か鈍角かが決まる．</li>
+              <li>${T('\\sin(180^\\circ - \\theta) = \\sin\\theta')}，${T('\\cos(180^\\circ - \\theta) = -\\cos\\theta')}，${T('\\tan(180^\\circ - \\theta) = -\\tan\\theta')}</li>
+            </ul>
+            <p class="note">負の答えは，欄の左の <span class="toggle-btn demo">−</span> を押してから入れます．</p>
+          </div>`
+      ]
+    },
     apply: {
       title: '三角比の活用',
       slides: [
@@ -742,6 +833,12 @@ document.addEventListener('DOMContentLoaded', () => {
     famous: { name: '⑧ 30°・45°・60°', label: '🔺 有名角' },
     comp: { name: '⑨ 45° 以下の角で表す', label: '🔄 余角' },
     expr: { name: '⑩ 式の値', label: '🧮 式の値' },
+    wideVal: { name: '⑪ 0°〜180° の三角比', label: '🌙 0°〜180°' },
+    wideComp: { name: '⑫ 鈍角を 45° 以下で', label: '🔄 鈍角' },
+    eq: { name: '⑬ 三角方程式', label: '🎯 三角方程式' },
+    slope: { name: '⑭ 直線の傾き', label: '📈 直線の傾き' },
+    rel2: { name: '⑮ 相互関係（0°〜180°）', label: '🔗 相互関係#02' },
+    expr2: { name: '⑯ 式の値（180° − θ）', label: '🧮 式の値#02' },
     applyLen: { name: '④ 長さを求める', label: '📐 活用：長さ' },
     applyAng: { name: '⑤ 角度を求める', label: '🧭 活用：角度' },
     applyMix: { name: '⑥ 活用ミックス', label: '🎯 活用ミックス' }
@@ -844,6 +941,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function generateProblem() {
+    figure.classList.remove('uc-figure');
     isLocked = false;
     lastWrongKey = null;
     judgeBtn.disabled = false;
@@ -902,6 +1000,43 @@ document.addEventListener('DOMContentLoaded', () => {
       figure.classList.add('hidden');
       showFigureBtn.classList.add('hidden');
       answerList.innerHTML = compRowHTML(prob);
+    } else if (WIDE_KINDS.indexOf(currentCategory) >= 0) {
+      // 0° ≦ θ ≦ 180°（三角比の拡張・三角方程式・直線の傾き・相互関係#02）
+      const gen = { wideVal: WD.generateVal, wideComp: WD.generateComp, eq: WD.generateEq, slope: WD.generateSlope, rel2: WD.generateRel2, expr2: WD.generateExpr2 }[currentCategory];
+      const key = q => JSON.stringify([q.fn, q.deg, q.eqTex, q.lineTex, q.sub, q.given, q.givenTex, q.obtuse, q.tex]);
+      do { prob = gen(); }
+      while (currentProblem && currentProblem.kind === prob.kind && key(currentProblem) === key(prob));
+      currentProblem = prob;
+      problemPrompt.classList.remove('prompt-long');
+      figure.innerHTML = '';
+      figure.classList.add('hidden');
+      showFigureBtn.classList.add('hidden');
+      const fdeg = (f, d) => T(`\\${f}\\,${d}^\\circ`);
+      const range = T('0^\\circ \\leqq \\theta \\leqq 180^\\circ');
+      if (prob.kind === 'wideVal') {
+        problemPrompt.innerHTML = `${fdeg(prob.fn, prob.deg)} の値を求めなさい．`;
+        answerList.innerHTML = ratioRowHTML({ key: prob.fn, tex: `\\${prob.fn}\\,${prob.deg}^\\circ =`, neg: true });
+      } else if (prob.kind === 'wideComp') {
+        problemPrompt.innerHTML = `${fdeg(prob.fn, prob.deg)} を，45° 以下の角の三角比で表しなさい．`;
+        answerList.innerHTML = compRowHTML(prob, { neg: true });
+      } else if (prob.kind === 'eq') {
+        problemPrompt.innerHTML = `${range} のとき，次の等式を満たす θ を求めなさい．<div class="math-line expr-line">${D(prob.eqTex)}</div>`;
+        answerList.innerHTML = eqRowHTML();
+      } else if (prob.kind === 'slope' && prob.sub === 'angle') {
+        problemPrompt.innerHTML = `直線 ${T(prob.lineTex)} と x 軸の正の向きとのなす角 θ を求めなさい．`;
+        answerList.innerHTML = numRowHTML({ kind: 'angle', mode: 'exact', label: T('\\theta =') });
+      } else if (prob.kind === 'slope') {
+        problemPrompt.innerHTML = `x 軸の正の向きとのなす角 θ が ${T(prob.deg + '^\\circ')} である直線の傾きを求めなさい．`;
+        answerList.innerHTML = ratioRowHTML({ key: 'slope', tex: '\\text{傾き} =', neg: true });
+      } else if (prob.kind === 'rel2') {
+        const [k1, k2] = prob.asks;
+        const cond = prob.given === 'sin' ? `θ は${prob.obtuse ? '鈍角' : '鋭角'}とする．` : `${range} とする．`;
+        problemPrompt.innerHTML = `${cond}${D('\\' + prob.given + '\\theta = ' + prob.givenTex)} のとき，${T('\\' + k1 + '\\theta')} と ${T('\\' + k2 + '\\theta')} の値を求めなさい．`;
+        answerList.innerHTML = prob.asks.map(k => ratioRowHTML({ key: k, tex: `\\${k}\\theta =`, neg: true })).join('');
+      } else {
+        problemPrompt.innerHTML = `次の式の値を求めなさい．<div class="math-line expr-line">${D(prob.tex)}</div>`;
+        answerList.innerHTML = ratioRowHTML({ key: 'value', tex: '\\text{値} =', neg: true });
+      }
     } else if (currentCategory === 'expr') {
       // 余角の関係を使って式の値を求める
       do { prob = FM.generateExpr(); }
@@ -950,11 +1085,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isGameOver || isLocked || !currentProblem) return;
     const rows = Array.from(answerList.querySelectorAll('.ans-row'));
     const kind = currentProblem.kind;
-    const tg = kind === 'apply' || kind === 'comp' || kind === 'expr' ? null : C.targets(currentProblem);
+    const wide = WIDE_KINDS.indexOf(kind) >= 0;
+    const tg = kind === 'apply' || kind === 'comp' || kind === 'expr' || wide ? null : C.targets(currentProblem);
     const results = rows.map(row => {
       if (row.dataset.kind === 'num') {
         const v = row.querySelector('.val-input').value;
+        if (kind === 'slope') return WD.judgeSlopeAngle(currentProblem, v);
         return kind === 'famous' ? FM.judgeAngle(currentProblem, v) : AP.judgeApply(currentProblem, v);
+      }
+      if (row.dataset.kind === 'eq') {
+        return WD.judgeEq(currentProblem, Array.from(row.querySelectorAll('.val-deg')).filter(x => x.offsetParent !== null).map(x => x.value));
+      }
+      if (row.dataset.kind === 'comp' && kind === 'wideComp') {
+        return WD.judgeComp(currentProblem, { neg: row.dataset.neg === '1', fn: row.dataset.fn, deg: row.querySelector('.val-deg').value });
       }
       if (row.dataset.kind === 'comp') {
         return FM.judgeComp(currentProblem, { fn: row.dataset.fn, deg: row.querySelector('.val-deg').value });
@@ -966,6 +1109,14 @@ document.addEventListener('DOMContentLoaded', () => {
         a: readInt(row, 'a'), b: readInt(row, 'b'), c: readInt(row, 'c'), d: readInt(row, 'd'),
         numRoot: row.dataset.numRoot === '1', frac: row.dataset.frac === '1', denRoot: row.dataset.denRoot === '1'
       };
+      if (wide) {
+        // 欄に「-」を直接打ったときは，− ボタンへ案内する（iPad の数字キーには - がある）
+        if (Array.from(row.querySelectorAll('.val-input')).some(x => /^\s*[-−－ー]/.test(x.value))) {
+          return { status: 'invalid', hint: '負の数は，欄の左の「−」ボタンを押してから数だけ入れます．' };
+        }
+        ans.neg = row.dataset.neg === '1';
+        return WD.judgeSigned(ans, kind === 'rel2' ? currentProblem.targets[row.dataset.key] : currentProblem.target);
+      }
       return kind === 'expr' ? FM.judgeValue(currentProblem, ans) : C.judgeRatio(ans, tg[row.dataset.key]);
     });
 
@@ -1059,6 +1210,27 @@ document.addEventListener('DOMContentLoaded', () => {
       html += '<p class="note">この三角形で，定義から残りの2つを求めることもできます．有理化してもしなくても正解です．</p>';
       figure.innerHTML = figureHTML(prob, { sideTex: { hyp: C.sqrtTex(prob.hyp2), opp: C.sqrtTex(prob.opp2), adj: C.sqrtTex(prob.adj2) } });
       figure.classList.remove('hidden');
+      showFigureBtn.classList.add('hidden');
+      explainBox.innerHTML = html;
+      explainBox.classList.remove('hidden');
+      showExplainBtn.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+      return;
+    }
+    if (WIDE_KINDS.indexOf(prob.kind) >= 0) {
+      const lines = { wideVal: WD.valLines, wideComp: WD.compLines, eq: WD.eqLines, slope: WD.slopeLines, rel2: WD.rel2Lines, expr2: q => q.lines }[prob.kind](prob);
+      lines.forEach(l => {
+        if (l.text) html += `<p class="note">${richText(l.text)}</p>`;
+        if (l.tex) html += `<div class="math-line">${D(l.tex)}</div>`;
+      });
+      // 答えは解説の最後の行に出るので，「答え：」は付けない
+      if (prob.kind === 'wideVal' || prob.kind === 'rel2' || (prob.kind === 'slope' && prob.sub === 'slope')) html += '<p class="note">有理化してもしなくても正解です．</p>';
+      const scene = WD.sceneFor(prob);
+      if (scene) {
+        figure.innerHTML = unitFigureHTML(scene);
+        figure.classList.add('uc-figure');
+        figure.classList.remove('hidden');
+      }
       showFigureBtn.classList.add('hidden');
       explainBox.innerHTML = html;
       explainBox.classList.remove('hidden');
