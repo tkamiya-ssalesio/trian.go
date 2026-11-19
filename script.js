@@ -794,6 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (window.TrianExtend) tutorials.extend = window.TrianExtend.create({ T, D });
+  if (window.TrianSine) tutorials.sine = window.TrianSine.create({ T, D });
 
   let activeTutorial = null;
   let currentSlideIndex = 0;
@@ -820,6 +821,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentSlideIndex > 0) { currentSlideIndex--; updateTutorialSlide(); }
   });
   tutorialNextBtn.addEventListener('click', () => {
+    // 「1行ずつ表示」のスライドは，まだ出していない行があれば1行出す
+    if (activeTutorial.advance && activeTutorial.advance()) return;
     if (currentSlideIndex < activeTutorial.slides.length - 1) { currentSlideIndex++; updateTutorialSlide(); }
     else show(tutorialSelectScreen, 'やり方を学ぶ');
   });

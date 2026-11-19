@@ -1250,3 +1250,35 @@ text.ex-neg { fill: var(--apple-red); }
 /* 解説スライドの小さい単位円では文字も小さく（弧にかからないように） */
 .figure-small.uc-figure .lbl.uc-val { font-size: 12px; }
 .figure-small.uc-figure .lbl.uc-lbl { font-size: 13px; }
+
+/* --- 正弦定理の導出（sine.js） --- */
+.sn-bar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; font-size: 13.5px; }
+.sn-toggle { display: inline-flex; align-items: center; gap: 4px; color: var(--apple-text-secondary); cursor: pointer; }
+.sn-toggle input { accent-color: var(--theme-primary); }
+.sn-bar .sn-next { width: auto; padding: 6px 14px; font-size: 13.5px; }
+.sn-bar .sn-next.hidden { display: none; }
+.sn-steps { padding-left: 1.5em; }
+.sn-step { transition: opacity 0.25s ease; }
+/* 隠した行も場所はとっておく（映したときに図や文字が動かない） */
+.sn-step.sn-hidden { opacity: 0; pointer-events: none; }
+.sn-figure svg { cursor: grab; }
+.sn-choose { flex-wrap: wrap; }
+.sn-choose button { width: auto; margin: 0; padding: 8px 14px; font-size: 14px; transform: none; }
+.sn-table td, .sn-table th { font-size: 14px; }
+/* 正弦定理：横長の画面では拡張と同じく左に説明，右に図．図の下の操作の分だけ図を小さくして1画面に収める */
+@media (min-width: 900px) and (orientation: landscape) {
+  .sn-slide .ex-stage { --sn-ctrl: 0px; }
+  .sn-slide .ex-stage:has(.ex-slider) { --sn-ctrl: 48px; }
+  .sn-slide .ex-stage:has(.sn-choose) { --sn-ctrl: 58px; }
+  .sn-slide .ex-stage:has(.ex-checks) { --sn-ctrl: 100px; }
+  .sn-slide .ex-stage:has(.ex-slider):has(.sn-choose) { --sn-ctrl: 106px; }
+  .sn-slide .ex-figure { max-width: min(100%, calc((100dvh - 380px - var(--sn-ctrl)) * var(--arw, 1.2))); }
+  .sn-slide .sn-steps li { font-size: 14.5px; line-height: 1.55; }
+  .sn-slide .ex-side .visual-box { padding: 10px 12px; }
+}
+/* 4:3 のプロジェクター（1024×768 など）：説明の列を少し広げ，文字を少し小さく */
+@media (min-width: 900px) and (max-width: 1199px) and (orientation: landscape) {
+  .sn-slide.ex-slide { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 10px 20px; }
+  .sn-slide p, .sn-slide li, .sn-slide .sn-steps li { font-size: 13.5px; line-height: 1.5; }
+  .sn-slide .highlight-box { font-size: 14px !important; padding: 10px 12px; }
+}
